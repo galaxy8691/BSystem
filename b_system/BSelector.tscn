@@ -1,3 +1,7 @@
-[gd_scene format=3 uid="uid://dbeutmet8mjwa"]
+[gd_scene load_steps=2 format=3 uid="uid://dbeutmet8mjwa"]
+
+[ext_resource type="Script" uid="uid://b05j76agsqlxw" path="res://b_system/b_selector.gd" id="1_thso8"]
 
 [node name="BSelector" type="Node"]
+script = ExtResource("1_thso8")
+metadata/_custom_type_script = "uid://d0uxnmjgnmtep"

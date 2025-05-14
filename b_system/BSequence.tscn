@@ -1,3 +1,7 @@
-[gd_scene format=3 uid="uid://d3a6vqotqbkba"]
+[gd_scene load_steps=2 format=3 uid="uid://d3a6vqotqbkba"]
+
+[ext_resource type="Script" uid="uid://bhlx65ah7kgis" path="res://b_system/b_sequence.gd" id="1_xukeh"]
 
 [node name="BSequence" type="Node"]
+script = ExtResource("1_xukeh")
+metadata/_custom_type_script = "uid://d0uxnmjgnmtep"

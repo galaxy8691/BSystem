@@ -1,3 +1,24 @@
-[gd_scene format=3 uid="uid://bo4x74ey81cjx"]
+[gd_scene load_steps=5 format=3 uid="uid://bo4x74ey81cjx"]
+
+[ext_resource type="Script" uid="uid://2lnucqsl5r0u" path="res://level/test_level.gd" id="1_1mn0o"]
+[ext_resource type="Texture2D" uid="uid://dfrjkbsd8y6t6" path="res://icon.svg" id="1_cg5et"]
+[ext_resource type="Script" uid="uid://cv5htvxqv6ud4" path="res://b_system/b_system.gd" id="3_28wxs"]
+[ext_resource type="Script" uid="uid://b05j76agsqlxw" path="res://b_system/b_selector.gd" id="4_owy5b"]
 
 [node name="TestLevel" type="Node2D"]
+script = ExtResource("1_1mn0o")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(422, 292)
+texture = ExtResource("1_cg5et")
+
+[node name="BSystem" type="Node" parent="." node_paths=PackedStringArray("actor")]
+script = ExtResource("3_28wxs")
+actor = NodePath("..")
+current_state = "State_Rotate"
+metadata/_custom_type_script = "uid://cv5htvxqv6ud4"
+
+[node name="BSelector" type="Node" parent="BSystem"]
+script = ExtResource("4_owy5b")
+state = "State_Rotate"
+metadata/_custom_type_script = "uid://b05j76agsqlxw"
