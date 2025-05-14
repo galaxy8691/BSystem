@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://d3a6vqotqbkba"]
 
-[ext_resource type="Script" uid="uid://bhlx65ah7kgis" path="res://b_system/b_sequence.gd" id="1_xukeh"]
+[ext_resource type="Script" uid="uid://b3646o5qp700k" path="res://b_system/scripts/b_sequence.gd" id="1_xukeh"]
 
 [node name="BSequence" type="Node"]
 script = ExtResource("1_xukeh")

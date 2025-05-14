@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://dc10wyoq0a28d"]
+
+[ext_resource type="Script" uid="uid://c1y7kgcatfk6p" path="res://b_system/scripts/BAction.gd" id="1_olasi"]
+
+[node name="BAtion" type="Node"]
+script = ExtResource("1_olasi")
+metadata/_custom_type_script = "uid://dsqgdkefhvn4n"

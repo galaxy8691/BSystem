@@ -14,7 +14,7 @@ func _run_child_from_index(start_index: int, children: Array, stop_conditions: A
 	for child_index in children.size():
 		if child_index >= start_index:
 			var child: BNode = children[child_index]
-			child.tick(actor, blackboard)
+			child._run(actor, blackboard)
 			if stop_conditions.has(child.last_action_type):
 				return child.last_action_type
 	return BType.ActionType.NOTSET
