@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://clapwggd7iujo"]
+
+[ext_resource type="Script" uid="uid://dohwhilcqye7f" path="res://b_system/scripts/b_state_sequence.gd" id="1_77qb2"]
+
+[node name="BStateSequence" type="Node"]
+script = ExtResource("1_77qb2")

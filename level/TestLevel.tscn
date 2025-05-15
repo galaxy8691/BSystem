@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://2lnucqsl5r0u" path="res://level/test_level.gd" id="1_1mn0o"]
 [ext_resource type="Texture2D" uid="uid://dfrjkbsd8y6t6" path="res://icon.svg" id="1_cg5et"]
 [ext_resource type="PackedScene" uid="uid://cyj6o8sn3kl1m" path="res://rotate_test_b_system.tscn" id="3_28wxs"]
-[ext_resource type="Script" uid="uid://cv5htvxqv6ud4" path="res://b_system/b_system.gd" id="4_owy5b"]
+[ext_resource type="Script" uid="uid://qbor445e5xr1" path="res://b_system/scripts/b_system.gd" id="4_owy5b"]
 [ext_resource type="Script" uid="uid://otn23i8xtitq" path="res://level/idle_b_sequence.gd" id="5_ifhsf"]
 [ext_resource type="Script" uid="uid://cnbcagi75411p" path="res://level/player_animation_b_action.gd" id="7_3fe3e"]
 [ext_resource type="Script" uid="uid://okipx8ir7v30" path="res://level/tell_finished_b_action.gd" id="7_tlx5d"]
@@ -67,12 +67,12 @@ libraries = {
 script = ExtResource("4_owy5b")
 actor = NodePath("..")
 init_state = "State_Idle"
-metadata/_custom_type_script = "uid://cv5htvxqv6ud4"
+metadata/_custom_type_script = "uid://qbor445e5xr1"
 
 [node name="IdleBSequence" type="Node" parent="IdleBSystem"]
 script = ExtResource("5_ifhsf")
 state = "State_Idle"
-metadata/_custom_type_script = "uid://b3646o5qp700k"
+metadata/_custom_type_script = "uid://dohwhilcqye7f"
 
 [node name="PlayerAnimationBAction" type="Node" parent="IdleBSystem/IdleBSequence"]
 script = ExtResource("7_3fe3e")
@@ -85,7 +85,7 @@ metadata/_custom_type_script = "uid://c1y7kgcatfk6p"
 [node name="MoveBSequence" type="Node" parent="IdleBSystem"]
 script = ExtResource("8_ifhsf")
 state = "State_Move"
-metadata/_custom_type_script = "uid://b3646o5qp700k"
+metadata/_custom_type_script = "uid://dohwhilcqye7f"
 
 [node name="StopAnimationBAction" type="Node" parent="IdleBSystem/MoveBSequence"]
 script = ExtResource("8_8ne6f")

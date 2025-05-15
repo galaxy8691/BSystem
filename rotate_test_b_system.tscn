@@ -1,7 +1,7 @@
 [gd_scene load_steps=10 format=3 uid="uid://cyj6o8sn3kl1m"]
 
-[ext_resource type="Script" uid="uid://cv5htvxqv6ud4" path="res://b_system/b_system.gd" id="1_a1mdu"]
-[ext_resource type="Script" uid="uid://b05j76agsqlxw" path="res://b_system/b_selector.gd" id="2_hnrnt"]
+[ext_resource type="Script" uid="uid://qbor445e5xr1" path="res://b_system/scripts/b_system.gd" id="1_a1mdu"]
+[ext_resource type="Script" uid="uid://4tptbdvawxfe" path="res://b_system/scripts/b_state_selector.gd" id="2_hnrnt"]
 [ext_resource type="Script" uid="uid://b3646o5qp700k" path="res://b_system/scripts/b_sequence.gd" id="3_jeemb"]
 [ext_resource type="Script" uid="uid://uj0jsujs7cna" path="res://level/is_three_times_b_action.gd" id="4_xg32b"]
 [ext_resource type="Script" uid="uid://b2hpl2815ssh2" path="res://level/change_to_counter_clockwise_b_action.gd" id="5_ear88"]
@@ -13,12 +13,12 @@
 [node name="RotateTestBSystem" type="Node"]
 script = ExtResource("1_a1mdu")
 init_state = "State_Clockwise"
-metadata/_custom_type_script = "uid://cv5htvxqv6ud4"
+metadata/_custom_type_script = "uid://qbor445e5xr1"
 
 [node name="ClockwiseBSelector" type="Node" parent="."]
 script = ExtResource("2_hnrnt")
 state = "State_Clockwise"
-metadata/_custom_type_script = "uid://b05j76agsqlxw"
+metadata/_custom_type_script = "uid://4tptbdvawxfe"
 
 [node name="ThreeTimesBSequence" type="Node" parent="ClockwiseBSelector"]
 script = ExtResource("3_jeemb")
@@ -39,7 +39,7 @@ metadata/_custom_type_script = "uid://c1y7kgcatfk6p"
 [node name="CClockwiseBSelector" type="Node" parent="."]
 script = ExtResource("2_hnrnt")
 state = "State_CounterClockwise"
-metadata/_custom_type_script = "uid://b05j76agsqlxw"
+metadata/_custom_type_script = "uid://4tptbdvawxfe"
 
 [node name="ZeroTimesBSequence" type="Node" parent="CClockwiseBSelector"]
 script = ExtResource("3_jeemb")
