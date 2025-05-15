@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://dbvxxkpobv157"]
+
+[ext_resource type="Script" uid="uid://c1a582gflkxaw" path="res://b_system/presets/scripts/change_state_b_action.gd" id="1_glklx"]
+
+[node name="ChangeStateBAction" type="Node"]
+script = ExtResource("1_glklx")
+metadata/_custom_type_script = "uid://c1y7kgcatfk6p"
