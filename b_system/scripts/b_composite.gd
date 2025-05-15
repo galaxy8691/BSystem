@@ -18,3 +18,7 @@ func _run_child_from_index(start_index: int, children: Array, stop_conditions: A
 			if stop_conditions.has(child.last_action_type):
 				return child.last_action_type
 	return BType.ActionType.NOTSET
+
+
+func _init_when_change_state(actor: Node, blackboard: Dictionary) -> void:
+	pass

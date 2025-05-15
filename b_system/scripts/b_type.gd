@@ -8,3 +8,9 @@ enum ActionType{
 	NOTSET
 }
 
+enum ThreeStateBool{
+	TRUE,
+	FALSE,
+	NOTSET
+}
+

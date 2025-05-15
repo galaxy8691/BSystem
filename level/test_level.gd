@@ -4,6 +4,14 @@ var rotate_times: int = 0
 var rotate_max_times: int = 3
 @onready var sprite: Sprite2D = $Sprite2D
 var target_position: Vector2 = Vector2(0, 0)
+@onready var animation_player: AnimationPlayer = $AnimationPlayer
+@onready var idle_b_system:BSystem = $IdleBSystem
+
+func _ready():
+	animation_player.animation_finished.connect(func(animation_name: String):
+		if animation_name == "idle":
+			idle_b_system.set_blackboard("idle_animation_finished", BType.ThreeStateBool.TRUE)
+	)
 
 func move_a_little():
 	position.x += 10
@@ -28,11 +36,16 @@ func rotate_counterclockwise_180():
 func _physics_process(_delta: float) -> void:
 	if Input.is_action_pressed("click"):
 		target_position = get_global_mouse_position()
-	if not sprite_in_target_position():
-		sprite_move_to_target_position()
+		idle_b_system.set_current_state("Move")
 
 func sprite_move_to_target_position():
 	sprite.position = sprite.position.move_toward(target_position, 100 * get_physics_process_delta_time())
 
 func sprite_in_target_position():
 	return sprite.position.distance_to(target_position) < 10
+
+func play_idle():
+	animation_player.play("idle")
+
+func stop_animation():
+	animation_player.stop()

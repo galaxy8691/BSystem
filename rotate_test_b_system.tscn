@@ -12,7 +12,7 @@
 
 [node name="RotateTestBSystem" type="Node"]
 script = ExtResource("1_a1mdu")
-current_state = "State_Clockwise"
+init_state = "State_Clockwise"
 metadata/_custom_type_script = "uid://cv5htvxqv6ud4"
 
 [node name="ClockwiseBSelector" type="Node" parent="."]

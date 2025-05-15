@@ -23,3 +23,21 @@ func set_current_state(state: String):
 
 func system_change_state(_state: String):
 	pass
+
+func _set_system_blackboard(key: String, value: Variant):
+	pass
+
+func _get_system_blackboard(key: String):
+	pass
+
+func set_blackboard(key: String, value: Variant):
+	if self is BSystem:
+		_set_system_blackboard(key, value)
+	else:
+		get_parent().set_blackboard(key, value)
+
+func get_blackboard(key: String):
+	if self is BSystem:
+		return _get_system_blackboard(key)
+	else:
+		return get_parent().get_blackboard(key)
