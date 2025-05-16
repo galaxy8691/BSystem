@@ -41,7 +41,7 @@ func _selector_tick(actor: Node, blackboard: Dictionary, fn_change_state: Callab
 		last_action_type = _run_child_from_index(0, get_children(), [BType.ActionType.SUCCESS, BType.ActionType.RUNNING], actor, blackboard, fn_change_state)
 	elif last_action_type == BType.ActionType.RUNNING:
 		var marker: int = _find_last_running_child(get_children())
-		last_action_type = get_children()[marker]._run(actor, blackboard)
+		last_action_type = get_children()[marker]._run(actor, blackboard, fn_change_state)
 		if last_action_type == BType.ActionType.SUCCESS or last_action_type == BType.ActionType.RUNNING:
 			return last_action_type
 		marker += 1
