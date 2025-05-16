@@ -3,11 +3,11 @@
 [ext_resource type="Script" uid="uid://qbor445e5xr1" path="res://b_system/scripts/b_system.gd" id="1_a1mdu"]
 [ext_resource type="Script" uid="uid://4tptbdvawxfe" path="res://b_system/scripts/b_state_selector.gd" id="2_hnrnt"]
 [ext_resource type="Script" uid="uid://b3646o5qp700k" path="res://b_system/scripts/b_sequence.gd" id="3_jeemb"]
-[ext_resource type="Script" uid="uid://uj0jsujs7cna" path="res://level/is_three_times_b_action.gd" id="4_xg32b"]
+[ext_resource type="Script" uid="uid://uj0jsujs7cna" path="res://level/Test1/is_three_times_b_action.gd" id="4_xg32b"]
 [ext_resource type="Script" uid="uid://c1a582gflkxaw" path="res://b_system/presets/scripts/change_state_b_action.gd" id="5_a1mdu"]
-[ext_resource type="Script" uid="uid://bv2igf3d82e8o" path="res://level/rotate_cb_action.gd" id="6_5b08n"]
-[ext_resource type="Script" uid="uid://dexl7fbbmfwha" path="res://level/is_zero_time_b_action.gd" id="7_hnrnt"]
-[ext_resource type="Script" uid="uid://bc3ob5qyuk4m0" path="res://level/rotate_ccb_action.gd" id="8_8v2hm"]
+[ext_resource type="Script" uid="uid://bv2igf3d82e8o" path="res://level/Test1/rotate_cb_action.gd" id="6_5b08n"]
+[ext_resource type="Script" uid="uid://dexl7fbbmfwha" path="res://level/Test1/is_zero_time_b_action.gd" id="7_hnrnt"]
+[ext_resource type="Script" uid="uid://bc3ob5qyuk4m0" path="res://level/Test1/rotate_ccb_action.gd" id="8_8v2hm"]
 
 [node name="RotateTestBSystem" type="Node"]
 script = ExtResource("1_a1mdu")
