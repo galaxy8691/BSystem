@@ -56,7 +56,7 @@ As a user, you only need to understand and use the following 6 key components:
 - **BSelector**: Selects a child node to execute until finding a successful node
 - **BStateSequence**: State sequence node, only executes in specific states, **must set state property**
 - **BStateSelector**: State selector node, only executes in specific states, **must set state property**
-- **BAction**: Leaf node that executes specific behaviors, **must implement the tick method**
+- **BAction**: Leaf node that executes specific behaviors, **must implement tick method**
 
 Other classes (such as BNode, BComposite, BStateComposite, etc.) are internal implementations of the system and users don't need to use them directly.
 
@@ -72,19 +72,22 @@ All nodes inheriting from BNode (including BSystem, BSequence, BSelector, BState
   ```
 
 ### Blackboard Data Access
-- **set_blackboard(key: String, value: Variant)**: Set blackboard data from any node
-  ```gdscript
-  # Set blackboard data from any BNode subclass
-  my_sequence.set_blackboard("target_found", true)
-  ```
 
-- **get_blackboard(key: String) -> Variant**: Get blackboard data from any node
-  ```gdscript
-  # Get blackboard data from any BNode subclass
-  var health = my_action.get_blackboard("player_health")
-  ```
+The blackboard is a shared dictionary that can be accessed directly from any node in the behavior tree:
 
-These methods allow you to access and modify system states and blackboard data from any node in the behavior tree without directly referencing the BSystem instance.
+```gdscript
+# Access the blackboard from any node
+func tick(actor, blackboard) -> BType.ActionType:
+    # Read from blackboard
+    var health = blackboard["player_health"]
+    
+    # Write to blackboard
+    blackboard["target_found"] = true
+    
+    return BType.ActionType.SUCCESS
+```
+
+The blackboard is automatically passed to all nodes during execution, making data sharing between nodes simple and efficient.
 
 ### Calling System Methods from External Sources
 
@@ -94,10 +97,10 @@ You can call BSystem methods directly from external sources (game logic) to cont
 ```gdscript
 # Switch AI state from game logic
 func _on_player_detected():
-    $Enemy/BSystem.system_change_state("Combat")  # Directly switch AI state from external
+    $Enemy/BSystem.change_state("Combat")  # Directly switch AI state from external
 
 func _on_player_lost():
-    $Enemy/BSystem.system_change_state("Search")  # Switch to search state
+    $Enemy/BSystem.change_state("Search")  # Switch to search state
 ```
 
 #### Accessing Blackboard Data
@@ -107,14 +110,10 @@ You can also directly access and modify BSystem's blackboard data from external 
 # Set blackboard data from external
 func _on_item_picked_up(item):
     $Enemy/BSystem.blackboard["last_seen_item"] = item
-    # Or use the provided method
-    $Enemy/BSystem._set_system_blackboard("last_seen_item", item)
 
 # Get blackboard data from external
 func _process(delta):
     var target = $Enemy/BSystem.blackboard.get("current_target")
-    # Or use the provided method
-    var target = $Enemy/BSystem._get_system_blackboard("current_target")
     if target:
         update_ui_target_indicator(target)
 ```
@@ -185,13 +184,13 @@ func _ready():
     vision_system.add_child(scan_sequence)
     
     # Can switch states of each system independently
-    movement_system.system_change_state("Walking")
-    vision_system.system_change_state("Scanning")
+    movement_system.change_state("Walking")
+    vision_system.change_state("Scanning")
 ```
 
 ## Implementing BAction
 
-When using BAction, you **must** define the `tick` method, which is the core of the behavior node and contains the specific behavior logic:
+When using BAction, you **must** define the `tick` method, which is the core of the behavior node and contains the specific behavior logic. The method now includes a `fn_change_state` parameter for changing states:
 
 ```gdscript
 class_name MyAction extends BAction
@@ -200,10 +199,15 @@ class_name MyAction extends BAction
 # Parameters:
 #   actor: The character/object that performs the behavior
 #   blackboard: Shared data dictionary
+#   fn_change_state: A callable for changing the system state
 # Return value:
 #   Must return one of the BType.ActionType enum values
-func tick(actor: Node, blackboard: Dictionary) -> BType.ActionType:
+func tick(actor: Node, blackboard: Dictionary, fn_change_state: Callable) -> BType.ActionType:
     # Implement specific behavior logic
+    
+    # To change state from within tick:
+    if some_condition:
+        fn_change_state.call("NewState")
     
     # Return corresponding status based on behavior execution:
     # Successfully completed behavior -> SUCCESS
@@ -220,9 +224,9 @@ Each BAction's `tick` method should return one of the following three states:
 
 ## State Naming Rules
 
-When using BStateSequence and BStateSelector, you **must** set their state property. The state name format should be:
+When using BStateSequence and BStateSelector, you **must** set their state property. state name format should be:
 - Recommended to use the `"State_stateName"` format, such as `"State_Patrol"`, `"State_Combat"`
-- The system will automatically handle adding the `"State_"` prefix, so when using the `system_change_state()` method, you only need to pass the state name part (such as `"Patrol"` instead of `"State_Patrol"`)
+- The system will automatically handle adding the `"State_"` prefix, so when using the `change_state()` method, you only need to pass the state name part (such as `"Patrol"` instead of `"State_Patrol"`)
 
 A node will only be executed when the current system state matches the node's state property.
 
@@ -242,7 +246,7 @@ func _init_when_change_state(actor: Node, blackboard: Dictionary) -> void:
     print("Initializing patrol state")
 ```
 
-The system will automatically call the `_init_when_change_state` method of the matching state node when the `system_change_state` method is called to switch states.
+The system will automatically call the `_init_when_change_state` method of the matching state node when the `change_state` method is called to switch states.
 
 ## Enum Types Provided by the System
 
@@ -275,10 +279,10 @@ Regular composite nodes (BSequence, BSelector) are suitable for general behavior
 4. Create and configure behavior nodes
 5. **Set the state property for all BStateSequence and BStateSelector nodes**
 6. **If initialization is needed when switching states, override the `_init_when_change_state` method of the node**
-7. **Implement the `tick` method for all BAction nodes**
+7. **Implement the `tick` method for all BAction nodes with the correct signature**
 8. Build behavior logic by connecting nodes
 9. Use blackboard to share data between nodes
-10. Use system_change_state method to switch states
+10. Use change_state method to switch states
 11. **If parallel processing of multiple behavior systems is needed, create separate BSystem instances for each system**
 
 ## Example
@@ -311,7 +315,7 @@ combat_selector.state = "State_Combat"  # State name must match system's current
 
 # Create a custom behavior node
 class MoveToPointAction extends BAction:
-    func tick(actor, blackboard) -> BType.ActionType:
+    func tick(actor, blackboard, fn_change_state) -> BType.ActionType:
         var points = blackboard["patrol_points"]
         var current_index = blackboard["current_point_index"]
         var target = points[current_index]
@@ -334,23 +338,23 @@ patrol_system.add_child(patrol_sequence)
 patrol_system.add_child(combat_selector)
 
 # Switch state (only need to pass state name part, no need to include "State_" prefix)
-patrol_system.system_change_state("Combat")  # Will switch system state to "State_Combat" and call combat_selector's _init_when_change_state method
+patrol_system.change_state("Combat")  # Will switch system state to "State_Combat" and call combat_selector's _init_when_change_state method
 ```
 
-## Example of Using Common Methods
+## Example of Using State Change in Actions
 
-The following example shows how to use common methods inside behavior nodes:
+The following example shows how to change states from within an action node using the fn_change_state parameter:
 
 ```gdscript
 class FindTargetAction extends BAction:
-    func tick(actor, blackboard) -> BType.ActionType:
+    func tick(actor, blackboard, fn_change_state) -> BType.ActionType:
         var target = actor.find_nearest_enemy()
         if target:
-            # Set blackboard data from behavior node
-            set_blackboard("current_target", target)
+            # Set blackboard data directly
+            blackboard["current_target"] = target
             
-            # Switch state from behavior node
-            set_current_state("Combat")
+            # Switch state using the provided callable
+            fn_change_state.call("Combat")
             return BType.ActionType.SUCCESS
         else:
             return BType.ActionType.FAILURE
@@ -358,12 +362,12 @@ class FindTargetAction extends BAction:
 
 ## Custom Behavior Node Examples
 
-Here are some examples of custom behavior nodes, demonstrating how to correctly implement the tick method:
+Here are some examples of custom behavior nodes, demonstrating how to correctly implement tick method:
 
 ```gdscript
 # Move to specified position behavior
 class_name MoveToPositionAction extends BAction
-func tick(actor: CharacterBody2D, blackboard: Dictionary) -> BType.ActionType:
+func tick(actor: CharacterBody2D, blackboard: Dictionary, fn_change_state: Callable) -> BType.ActionType:
     var target_position = blackboard.get("target_position")
     if not target_position:
         return BType.ActionType.FAILURE
@@ -378,9 +382,11 @@ func tick(actor: CharacterBody2D, blackboard: Dictionary) -> BType.ActionType:
 
 # Attack target behavior
 class_name AttackTargetAction extends BAction
-func tick(actor: Node, blackboard: Dictionary) -> BType.ActionType:
+func tick(actor: Node, blackboard: Dictionary, fn_change_state: Callable) -> BType.ActionType:
     var target = blackboard.get("combat_target")
     if not target or not is_instance_valid(target):
+        # Target lost, switch to search state
+        fn_change_state.call("Search")
         return BType.ActionType.FAILURE
         
     if actor.global_position.distance_to(target.global_position) > actor.attack_range:
@@ -397,7 +403,7 @@ class_name WaitAction extends BAction
 var wait_timer: float = 0
 var duration: float = 2.0
 
-func tick(actor: Node, blackboard: Dictionary) -> BType.ActionType:
+func tick(actor: Node, blackboard: Dictionary, fn_change_state: Callable) -> BType.ActionType:
     if wait_timer <= 0:
         wait_timer = duration
         

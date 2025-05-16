@@ -1,14 +1,14 @@
 extends BAction
 
-func tick(actor: Node, blackboard: Dictionary) -> BType.ActionType:
+func tick(actor: Node, blackboard: Dictionary, fn_change_state: Callable) -> BType.ActionType:
 	if actor.sprite_in_target_position():
-		set_blackboard("move_finished", BType.ThreeStateBool.TRUE)
+		blackboard["move_finished"] = BType.ThreeStateBool.TRUE
 		return BType.ActionType.SUCCESS
 	else:
-		var move_finished = get_blackboard("move_finished")
+		var move_finished = blackboard.get("move_finished")
 		if move_finished == BType.ThreeStateBool.NOTSET:
 			actor.sprite_move_to_target_position()
-			set_blackboard("move_finished", BType.ThreeStateBool.FALSE)
+			blackboard["move_finished"] = BType.ThreeStateBool.FALSE
 			return BType.ActionType.RUNNING
 		elif move_finished == BType.ThreeStateBool.FALSE:
 			actor.sprite_move_to_target_position()

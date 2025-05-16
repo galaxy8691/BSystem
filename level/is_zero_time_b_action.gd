@@ -1,6 +1,6 @@
 extends BAction
 
-func tick(actor: Node, blackboard: Dictionary) -> BType.ActionType:
+func tick(actor: Node, blackboard: Dictionary, fn_change_state: Callable) -> BType.ActionType:
 	if actor.rotate_times == 0:
 		return BType.ActionType.SUCCESS
 	else:

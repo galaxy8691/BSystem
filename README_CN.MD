@@ -72,19 +72,22 @@ $Character.add_child(vision_system)
   ```
 
 ### 黑板数据访问
-- **set_blackboard(key: String, value: Variant)**：从任何节点设置黑板数据
-  ```gdscript
-  # 从任何BNode子类中设置黑板数据
-  my_sequence.set_blackboard("target_found", true)
-  ```
 
-- **get_blackboard(key: String) -> Variant**：从任何节点获取黑板数据
-  ```gdscript
-  # 从任何BNode子类中获取黑板数据
-  var health = my_action.get_blackboard("player_health")
-  ```
+黑板是一个共享字典，可以直接从行为树中的任何节点访问：
 
-这些方法使得您可以从行为树中的任何节点访问和修改系统状态和黑板数据，无需直接引用BSystem实例。
+```gdscript
+# 从任何节点访问黑板
+func tick(actor, blackboard) -> BType.ActionType:
+    # 从黑板读取数据
+    var health = blackboard["player_health"]
+    
+    # 向黑板写入数据
+    blackboard["target_found"] = true
+    
+    return BType.ActionType.SUCCESS
+```
+
+黑板会在执行过程中自动传递给所有节点，使节点间的数据共享变得简单高效。
 
 ### 从外部调用系统方法
 
@@ -94,10 +97,10 @@ $Character.add_child(vision_system)
 ```gdscript
 # 从游戏逻辑中切换AI状态
 func _on_player_detected():
-    $Enemy/BSystem.system_change_state("Combat")  # 直接从外部切换AI状态
+    $Enemy/BSystem.change_state("Combat")  # 直接从外部切换AI状态
 
 func _on_player_lost():
-    $Enemy/BSystem.system_change_state("Search")  # 切换到搜索状态
+    $Enemy/BSystem.change_state("Search")  # 切换到搜索状态
 ```
 
 #### 访问黑板数据
@@ -107,14 +110,10 @@ func _on_player_lost():
 # 从外部设置黑板数据
 func _on_item_picked_up(item):
     $Enemy/BSystem.blackboard["last_seen_item"] = item
-    # 或使用提供的方法
-    $Enemy/BSystem._set_system_blackboard("last_seen_item", item)
 
 # 从外部获取黑板数据
 func _process(delta):
     var target = $Enemy/BSystem.blackboard.get("current_target")
-    # 或使用提供的方法
-    var target = $Enemy/BSystem._get_system_blackboard("current_target")
     if target:
         update_ui_target_indicator(target)
 ```
@@ -185,13 +184,13 @@ func _ready():
     vision_system.add_child(scan_sequence)
     
     # 可以单独切换每个系统的状态
-    movement_system.system_change_state("Walking")
-    vision_system.system_change_state("Scanning")
+    movement_system.change_state("Walking")
+    vision_system.change_state("Scanning")
 ```
 
 ## 实现BAction
 
-使用BAction时，**必须**定义`tick`方法，该方法是行为节点的核心，包含了具体的行为逻辑：
+使用BAction时，**必须**定义`tick`方法，该方法是行为节点的核心，包含了具体的行为逻辑。该方法现在包含一个`fn_change_state`参数用于改变状态：
 
 ```gdscript
 class_name MyAction extends BAction
@@ -200,10 +199,15 @@ class_name MyAction extends BAction
 # 参数:
 #   actor: 执行行为的角色/对象
 #   blackboard: 共享数据字典
+#   fn_change_state: 用于改变系统状态的可调用对象
 # 返回值:
 #   必须返回BType.ActionType枚举值之一
-func tick(actor: Node, blackboard: Dictionary) -> BType.ActionType:
+func tick(actor: Node, blackboard: Dictionary, fn_change_state: Callable) -> BType.ActionType:
     # 实现具体的行为逻辑
+    
+    # 在tick中改变状态的方法:
+    if some_condition:
+        fn_change_state.call("NewState")
     
     # 根据行为执行情况返回对应状态:
     # 成功完成行为 -> SUCCESS
@@ -222,7 +226,7 @@ func tick(actor: Node, blackboard: Dictionary) -> BType.ActionType:
 
 使用BStateSequence和BStateSelector时，**必须**设置其state属性。state名称格式应为：
 - 推荐使用 `"State_状态名"` 格式，例如 `"State_Patrol"`、`"State_Combat"`
-- 系统内部会自动处理添加 `"State_"` 前缀的操作，所以使用 `system_change_state()` 方法时只需传入状态名部分（如 `"Patrol"` 而非 `"State_Patrol"`）
+- 系统内部会自动处理添加 `"State_"` 前缀的操作，所以使用 `change_state()` 方法时只需传入状态名部分（如 `"Patrol"` 而非 `"State_Patrol"`）
 
 只有当系统当前状态与节点的state属性匹配时，该节点才会被执行。
 
@@ -242,7 +246,7 @@ func _init_when_change_state(actor: Node, blackboard: Dictionary) -> void:
     print("初始化巡逻状态")
 ```
 
-系统会在调用`system_change_state`方法切换状态时，自动调用匹配状态节点的`_init_when_change_state`方法。
+系统会在调用`change_state`方法切换状态时，自动调用匹配状态节点的`_init_when_change_state`方法。
 
 ## 系统提供的枚举类型
 
@@ -275,10 +279,10 @@ B System提供了两种重要的枚举类型：
 4. 创建并配置行为节点
 5. **为所有BStateSequence和BStateSelector节点设置state属性**
 6. **如需在状态切换时执行初始化，重写节点的`_init_when_change_state`方法**
-7. **为所有BAction节点实现`tick`方法**
+7. **为所有BAction节点实现带有正确签名的tick方法**
 8. 通过连接节点构建行为逻辑
 9. 使用blackboard在节点间共享数据
-10. 使用system_change_state方法切换不同状态
+10. 使用change_state方法切换不同状态
 11. **如果需要并行处理多个行为系统，为每个系统创建独立的BSystem实例**
 
 ## 示例
@@ -311,7 +315,7 @@ combat_selector.state = "State_Combat"  # 状态名必须与系统当前状态�
 
 # 创建一个自定义行为节点
 class MoveToPointAction extends BAction:
-    func tick(actor, blackboard) -> BType.ActionType:
+    func tick(actor, blackboard, fn_change_state) -> BType.ActionType:
         var points = blackboard["patrol_points"]
         var current_index = blackboard["current_point_index"]
         var target = points[current_index]
@@ -334,23 +338,23 @@ patrol_system.add_child(patrol_sequence)
 patrol_system.add_child(combat_selector)
 
 # 切换状态（只需传入状态名部分，无需包含"State_"前缀）
-patrol_system.system_change_state("Combat")  # 将系统状态切换为"State_Combat"，并调用combat_selector的_init_when_change_state方法
+patrol_system.change_state("Combat")  # 将系统状态切换为"State_Combat"，并调用combat_selector的_init_when_change_state方法
 ```
 
-## 使用通用方法的示例
+## 在动作节点中使用状态切换的示例
 
-以下示例展示了如何在行为节点内部使用通用方法：
+以下示例展示了如何在动作节点中使用fn_change_state参数来改变状态：
 
 ```gdscript
 class FindTargetAction extends BAction:
-    func tick(actor, blackboard) -> BType.ActionType:
+    func tick(actor, blackboard, fn_change_state) -> BType.ActionType:
         var target = actor.find_nearest_enemy()
         if target:
-            # 从行为节点中设置黑板数据
-            set_blackboard("current_target", target)
+            # 直接设置黑板数据
+            blackboard["current_target"] = target
             
-            # 从行为节点中切换状态
-            set_current_state("Combat")
+            # 使用提供的可调用对象切换状态
+            fn_change_state.call("Combat")
             return BType.ActionType.SUCCESS
         else:
             return BType.ActionType.FAILURE
@@ -363,7 +367,7 @@ class FindTargetAction extends BAction:
 ```gdscript
 # 移动到指定位置的行为
 class_name MoveToPositionAction extends BAction
-func tick(actor: CharacterBody2D, blackboard: Dictionary) -> BType.ActionType:
+func tick(actor: CharacterBody2D, blackboard: Dictionary, fn_change_state: Callable) -> BType.ActionType:
     var target_position = blackboard.get("target_position")
     if not target_position:
         return BType.ActionType.FAILURE
@@ -378,9 +382,11 @@ func tick(actor: CharacterBody2D, blackboard: Dictionary) -> BType.ActionType:
 
 # 攻击目标的行为
 class_name AttackTargetAction extends BAction
-func tick(actor: Node, blackboard: Dictionary) -> BType.ActionType:
+func tick(actor: Node, blackboard: Dictionary, fn_change_state: Callable) -> BType.ActionType:
     var target = blackboard.get("combat_target")
     if not target or not is_instance_valid(target):
+        # 目标丢失，切换到搜索状态
+        fn_change_state.call("Search")
         return BType.ActionType.FAILURE
         
     if actor.global_position.distance_to(target.global_position) > actor.attack_range:
@@ -397,7 +403,7 @@ class_name WaitAction extends BAction
 var wait_timer: float = 0
 var duration: float = 2.0
 
-func tick(actor: Node, blackboard: Dictionary) -> BType.ActionType:
+func tick(actor: Node, blackboard: Dictionary, fn_change_state: Callable) -> BType.ActionType:
     if wait_timer <= 0:
         wait_timer = duration
         
