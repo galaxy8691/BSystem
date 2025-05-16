@@ -12,9 +12,7 @@ func _physics_process(_delta: float) -> void:
 	for child in get_children():
 		if child is BComposite and "State_" + child.state == current_state:
 			last_action_type = child._run(actor, blackboard, change_state)
-			if last_action_type == BType.ActionType.FAILURE or last_action_type == BType.ActionType.SUCCESS:
-				clear()
-				break
+
 
 
 
