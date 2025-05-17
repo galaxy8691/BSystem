@@ -1,16 +1,9 @@
-[gd_scene load_steps=15 format=3 uid="uid://brfbjk0gaftx0"]
+[gd_scene load_steps=8 format=3 uid="uid://brfbjk0gaftx0"]
 
 [ext_resource type="Texture2D" uid="uid://dfrjkbsd8y6t6" path="res://icon.svg" id="1_cg5et"]
 [ext_resource type="Script" uid="uid://lr50nx737hvc" path="res://level/Test2/test_lite.gd" id="1_f6vk2"]
-[ext_resource type="PackedScene" uid="uid://cyj6o8sn3kl1m" path="res://level/Test1/rotate_test_b_system.tscn" id="3_28wxs"]
-[ext_resource type="Script" uid="uid://qbor445e5xr1" path="res://b_system/scripts/b_system.gd" id="4_owy5b"]
-[ext_resource type="Script" uid="uid://otn23i8xtitq" path="res://level/Test1/idle_b_sequence.gd" id="5_ifhsf"]
-[ext_resource type="Script" uid="uid://cnbcagi75411p" path="res://level/Test1/player_animation_b_action.gd" id="7_3fe3e"]
-[ext_resource type="Script" uid="uid://okipx8ir7v30" path="res://level/Test1/tell_finished_b_action.gd" id="7_tlx5d"]
-[ext_resource type="Script" uid="uid://mpnugom41xdh" path="res://level/Test1/move_b_action.gd" id="8_4o45j"]
-[ext_resource type="Script" uid="uid://bmcovkmx51plk" path="res://level/Test1/stop_animation_b_action.gd" id="8_8ne6f"]
-[ext_resource type="Script" uid="uid://dgt26qqw8d42r" path="res://level/Test1/move_b_sequence.gd" id="8_ifhsf"]
-[ext_resource type="Script" uid="uid://c1a582gflkxaw" path="res://b_system/presets/scripts/change_state_b_action.gd" id="11_ifhsf"]
+[ext_resource type="Script" uid="uid://d1ln2mgy8k6lh" path="res://level/Test2/rotate_b_system_lite.gd" id="2_f6vk2"]
+[ext_resource type="Script" uid="uid://c1gl5qvpbq8xa" path="res://level/Test2/idle_b_system_lite.gd" id="4_p0rde"]
 
 [sub_resource type="Animation" id="Animation_owy5b"]
 length = 0.001
@@ -51,52 +44,23 @@ _data = {
 [node name="TestLite" type="Node2D"]
 script = ExtResource("1_f6vk2")
 
+[node name="RotateBSystemLite" type="Node" parent="." node_paths=PackedStringArray("actor")]
+script = ExtResource("2_f6vk2")
+actor = NodePath("..")
+init_state = "Clockwise"
+metadata/_custom_type_script = "uid://w1hr40vjsbhk"
+
 [node name="Sprite2D" type="Sprite2D" parent="."]
 position = Vector2(422, 292)
 texture = ExtResource("1_cg5et")
-
-[node name="RotateTestBSystem" parent="." node_paths=PackedStringArray("actor") instance=ExtResource("3_28wxs")]
-actor = NodePath("..")
-init_state = "Clockwise"
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {
 &"": SubResource("AnimationLibrary_8aybj")
 }
 
-[node name="IdleBSystem" type="Node" parent="." node_paths=PackedStringArray("actor")]
-script = ExtResource("4_owy5b")
+[node name="IdleBSystemLite" type="Node" parent="." node_paths=PackedStringArray("actor")]
+script = ExtResource("4_p0rde")
 actor = NodePath("..")
 init_state = "Idle"
-metadata/_custom_type_script = "uid://qbor445e5xr1"
-
-[node name="IdleBSequence" type="Node" parent="IdleBSystem"]
-script = ExtResource("5_ifhsf")
-state = "Idle"
-metadata/_custom_type_script = "uid://dohwhilcqye7f"
-
-[node name="PlayerAnimationBAction" type="Node" parent="IdleBSystem/IdleBSequence"]
-script = ExtResource("7_3fe3e")
-metadata/_custom_type_script = "uid://c1y7kgcatfk6p"
-
-[node name="TellFinishedBAction" type="Node" parent="IdleBSystem/IdleBSequence"]
-script = ExtResource("7_tlx5d")
-metadata/_custom_type_script = "uid://c1y7kgcatfk6p"
-
-[node name="MoveBSequence" type="Node" parent="IdleBSystem"]
-script = ExtResource("8_ifhsf")
-state = "Move"
-metadata/_custom_type_script = "uid://dohwhilcqye7f"
-
-[node name="StopAnimationBAction" type="Node" parent="IdleBSystem/MoveBSequence"]
-script = ExtResource("8_8ne6f")
-metadata/_custom_type_script = "uid://c1y7kgcatfk6p"
-
-[node name="MoveBAction" type="Node" parent="IdleBSystem/MoveBSequence"]
-script = ExtResource("8_4o45j")
-metadata/_custom_type_script = "uid://c1y7kgcatfk6p"
-
-[node name="ChangeStateBAction" type="Node" parent="IdleBSystem/MoveBSequence"]
-script = ExtResource("11_ifhsf")
-state = "Idle"
-metadata/_custom_type_script = "uid://c1a582gflkxaw"
+metadata/_custom_type_script = "uid://w1hr40vjsbhk"

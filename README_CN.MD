@@ -11,6 +11,7 @@ B System是一个基于Godot引擎的行为树（Behavior Tree）实现，用于
 - **组合节点**：包含Sequence（序列）和Selector（选择器）等基础组合节点
 - **状态组合节点**：新增的StateComposite系列节点，专用于状态管理
 - **可扩展性**：基于Godot的节点系统，易于扩展和自定义
+- **轻量版本**：BSystemLite提供更简单的状态管理，不需要完整的行为树结构
 
 ## 核心设计理念
 
@@ -49,8 +50,9 @@ $Character.add_child(vision_system)
 
 ## 用户需要使用的核心组件
 
-作为用户，您只需要了解和使用以下6个关键组件：
+作为用户，您只需要了解和使用以下核心组件：
 
+### 标准行为树（完整功能）
 - **BSystem**：行为树的根节点，管理整个行为树的执行和状态，**必须设置actor和init_state**
 - **BSequence**：按顺序执行子节点，直到遇到失败或全部成功
 - **BSelector**：选择一个子节点执行，直到找到成功的节点
@@ -58,7 +60,75 @@ $Character.add_child(vision_system)
 - **BStateSelector**：带状态的选择器节点，只在特定状态下执行，**必须设置state属性**
 - **BAction**：执行具体行为的叶节点，**必须实现tick方法**
 
+### 轻量级状态机
+- **BSystemLite**：简化的状态机系统，用于更直接的状态控制，**必须设置actor和init_state**
+
 其他类（如BNode、BComposite、BStateComposite等）都是系统内部实现，用户无需直接使用。
+
+## BSystemLite - 轻量级状态机
+
+BSystemLite提供了一种简化的状态管理方法，当您不需要完整的行为树结构时可以使用它。对于小规模的状态控制，它更高效，您可以直接编写状态逻辑。
+
+### 使用BSystemLite
+
+要使用BSystemLite，您需要：
+
+1. 继承BSystemLite类
+2. 重写`_init_call()`方法来注册您的状态
+3. 定义状态函数和初始化函数
+4. 使用`change_state()`方法添加状态转换
+
+```gdscript
+extends BSystemLite
+
+func _init_call():
+    # 注册状态及其处理函数和初始化函数
+    insert_state("Idle", idle_state, idle_init)
+    insert_state("Move", move_state, move_init)
+    
+    # 可选：定义状态之间的关系
+    insert_state_last_type("Idle", "Move")
+
+# Idle状态的处理函数
+func idle_state():
+    # 状态逻辑
+    if some_condition:
+        change_state("Move")
+
+# Idle状态的初始化函数
+func idle_init():
+    # 进入Idle状态时的初始化逻辑
+    blackboard["some_value"] = 0
+    
+# Move状态的处理函数
+func move_state():
+    # 状态逻辑
+    if reached_destination:
+        change_state("Idle")
+        
+# Move状态的初始化函数
+func move_init():
+    # 进入Move状态时的初始化逻辑
+    blackboard["move_started"] = true
+```
+
+### BSystemLite与完整BSystem的比较
+
+| 功能 | BSystemLite | BSystem |
+|---------|-------------|---------|
+| 复杂度 | 低（直接状态函数） | 高（树结构） |
+| 性能 | 对简单任务更高效 | 针对复杂行为优化 |
+| 结构 | 扁平状态机 | 层次行为树 |
+| 使用场景 | 简单的基于状态的控制 | 复杂的AI行为 |
+| 设置 | 直接函数定义 | 节点层次结构构建 |
+
+### 何时使用BSystemLite
+
+在以下情况下使用BSystemLite：
+- 您有一个只包含少量状态的简单状态机
+- 您想直接控制状态逻辑
+- 性能至关重要
+- 您的行为不需要复杂的层次结构
 
 ## 所有节点的通用方法
 
@@ -145,6 +215,60 @@ b_system.blackboard = {
 ```
 
 如果不设置actor或init_state，系统将无法正常工作，可能导致错误或行为树不执行。
+
+## BSystemLite示例
+
+以下是使用BSystemLite为旋转对象实现两个状态的完整示例：
+
+```gdscript
+extends BSystemLite
+
+func _init_call():
+    # 注册顺时针和逆时针状态
+    insert_state("Clockwise", clockwise_state, clockwise_init)
+    insert_state("CounterClockwise", counterclockwise_state, counterclockwise_init)
+
+# 顺时针旋转状态
+func clockwise_state():
+    if actor.rotate_times >= 200:
+        # 达到旋转限制时切换到逆时针
+        change_state("CounterClockwise")
+    else:
+        # 继续顺时针旋转
+        actor.rotate_clockwise_180()
+
+# 顺时针状态初始化
+func clockwise_init():
+    # 无需特殊初始化
+    pass
+
+# 逆时针旋转状态
+func counterclockwise_state():
+    if actor.rotate_times == 0:
+        # 旋转重置时切回顺时针
+        change_state("Clockwise")
+    else:
+        # 继续逆时针旋转
+        actor.rotate_counterclockwise_180()
+
+# 逆时针状态初始化
+func counterclockwise_init():
+    # 无需特殊初始化
+    pass
+```
+
+场景中的设置：
+
+```gdscript
+# 在场景设置中：
+@onready var rotate_system = $RotateBSystemLite
+
+func _ready():
+    # actor和init_state应在检查器中设置
+    # rotate_system.actor = self
+    # rotate_system.init_state = "Clockwise"
+    pass
+```
 
 ## 多系统协作示例
 

@@ -11,6 +11,7 @@ B System is a Behavior Tree implementation based on the Godot engine, designed f
 - **Composite Nodes**: Includes basic composite nodes such as Sequence and Selector
 - **State Composite Nodes**: New StateComposite series nodes specially designed for state management
 - **Extensibility**: Based on Godot's node system, easy to extend and customize
+- **Lightweight Version**: BSystemLite for simpler state management without the full behavior tree structure
 
 ## Core Design Philosophy
 
@@ -49,8 +50,9 @@ Before designing behavior trees, you should carefully analyze the behavior requi
 
 ## Core Components Users Need
 
-As a user, you only need to understand and use the following 6 key components:
+As a user, you only need to understand and use the following components:
 
+### Standard Behavior Tree (Full Features)
 - **BSystem**: The root node of the behavior tree, manages the execution and state of the entire behavior tree, **must set actor and init_state**
 - **BSequence**: Executes child nodes in sequence until encountering a failure or all succeed
 - **BSelector**: Selects a child node to execute until finding a successful node
@@ -58,7 +60,75 @@ As a user, you only need to understand and use the following 6 key components:
 - **BStateSelector**: State selector node, only executes in specific states, **must set state property**
 - **BAction**: Leaf node that executes specific behaviors, **must implement tick method**
 
+### Lightweight State Machine
+- **BSystemLite**: Simplified state machine system for more direct state control, **must set actor and init_state**
+
 Other classes (such as BNode, BComposite, BStateComposite, etc.) are internal implementations of the system and users don't need to use them directly.
+
+## BSystemLite - Lightweight State Machine
+
+BSystemLite provides a simplified approach to state management when you don't need the full behavior tree structure. It's more efficient for small-scale state control where you can write state logic directly.
+
+### Using BSystemLite
+
+To use BSystemLite, you need to:
+
+1. Extend the BSystemLite class
+2. Override the `_init_call()` method to register your states
+3. Define state functions and initialization functions
+4. Add state transitions using the `change_state()` method
+
+```gdscript
+extends BSystemLite
+
+func _init_call():
+    # Register states with their handler functions and init functions
+    insert_state("Idle", idle_state, idle_init)
+    insert_state("Move", move_state, move_init)
+    
+    # Optionally define the relationship between states
+    insert_state_last_type("Idle", "Move")
+
+# State handler function for Idle state
+func idle_state():
+    # State logic here
+    if some_condition:
+        change_state("Move")
+
+# State initialization function for Idle state
+func idle_init():
+    # Initialization logic when entering Idle state
+    blackboard["some_value"] = 0
+    
+# State handler function for Move state
+func move_state():
+    # State logic here
+    if reached_destination:
+        change_state("Idle")
+        
+# State initialization function for Move state
+func move_init():
+    # Initialization logic when entering Move state
+    blackboard["move_started"] = true
+```
+
+### BSystemLite vs. Full BSystem
+
+| Feature | BSystemLite | BSystem |
+|---------|-------------|---------|
+| Complexity | Low (direct state functions) | High (tree structure) |
+| Performance | More efficient for simple tasks | Optimized for complex behaviors |
+| Structure | Flat state machine | Hierarchical behavior tree |
+| Use Case | Simple state-based control | Complex AI behaviors |
+| Setup | Direct function definitions | Node hierarchy construction |
+
+### When to Use BSystemLite
+
+Use BSystemLite when:
+- You have a simple state machine with a few states
+- You want direct control over state logic
+- Performance is critical
+- Your behaviors don't require complex hierarchical structures
 
 ## Common Methods for All Nodes
 
@@ -145,6 +215,60 @@ b_system.blackboard = {
 ```
 
 If actor or init_state is not set, the system will not work properly, which may cause errors or prevent the behavior tree from executing.
+
+## BSystemLite Example
+
+Here's a complete example of using BSystemLite for a rotating object with two states:
+
+```gdscript
+extends BSystemLite
+
+func _init_call():
+    # Register Clockwise and CounterClockwise states
+    insert_state("Clockwise", clockwise_state, clockwise_init)
+    insert_state("CounterClockwise", counterclockwise_state, counterclockwise_init)
+
+# Clockwise rotation state
+func clockwise_state():
+    if actor.rotate_times >= 200:
+        # Switch to counter-clockwise when rotation limit reached
+        change_state("CounterClockwise")
+    else:
+        # Continue rotating clockwise
+        actor.rotate_clockwise_180()
+
+# Initialization for clockwise state
+func clockwise_init():
+    # No special initialization needed
+    pass
+
+# Counter-clockwise rotation state
+func counterclockwise_state():
+    if actor.rotate_times == 0:
+        # Switch back to clockwise when rotation is reset
+        change_state("Clockwise")
+    else:
+        # Continue rotating counter-clockwise
+        actor.rotate_counterclockwise_180()
+
+# Initialization for counter-clockwise state
+func counterclockwise_init():
+    # No special initialization needed
+    pass
+```
+
+Setup in the scene:
+
+```gdscript
+# In your scene setup:
+@onready var rotate_system = $RotateBSystemLite
+
+func _ready():
+    # The actor and init_state should be set in the inspector
+    # rotate_system.actor = self
+    # rotate_system.init_state = "Clockwise"
+    pass
+```
 
 ## Multi-System Collaboration Example
 

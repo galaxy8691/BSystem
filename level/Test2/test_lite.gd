@@ -5,7 +5,7 @@ var rotate_max_times: int = 3
 @onready var sprite: Sprite2D = $Sprite2D
 var target_position: Vector2 = Vector2(0, 0)
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
-@onready var idle_b_system:BSystem = $IdleBSystem
+@onready var idle_b_system:BSystemLite = $IdleBSystemLite
 
 func _ready():
 	animation_player.animation_finished.connect(func(animation_name: String):
