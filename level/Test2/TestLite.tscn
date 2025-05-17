@@ -1,7 +1,7 @@
-[gd_scene load_steps=8 format=3 uid="uid://brfbjk0gaftx0"]
+[gd_scene load_steps=8 format=3 uid="uid://brfbjk0gaftx2"]
 
 [ext_resource type="Texture2D" uid="uid://dfrjkbsd8y6t6" path="res://icon.svg" id="1_cg5et"]
-[ext_resource type="Script" uid="uid://lr50nx737hvc" path="res://level/Test2/test_lite.gd" id="1_f6vk2"]
+[ext_resource type="Script" uid="uid://lr50nx737hvc" path="res://level/Test2/test_lite.gd" id="1_r2a77"]
 [ext_resource type="Script" uid="uid://d1ln2mgy8k6lh" path="res://level/Test2/rotate_b_system_lite.gd" id="2_f6vk2"]
 [ext_resource type="Script" uid="uid://c1gl5qvpbq8xa" path="res://level/Test2/idle_b_system_lite.gd" id="4_p0rde"]
 
@@ -42,7 +42,7 @@ _data = {
 }
 
 [node name="TestLite" type="Node2D"]
-script = ExtResource("1_f6vk2")
+script = ExtResource("1_r2a77")
 
 [node name="RotateBSystemLite" type="Node" parent="." node_paths=PackedStringArray("actor")]
 script = ExtResource("2_f6vk2")
