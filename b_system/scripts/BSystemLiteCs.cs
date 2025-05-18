@@ -5,6 +5,11 @@ using System.Collections.Generic;
 [GlobalClass]
 public partial class BSystemLiteCs : Node
 {
+	public enum ThreeStateBool{
+	TRUE = 0,
+	FALSE = 1,
+	NOTSET = 2
+	}
 	private Dictionary<string, Action> state_fns = new Dictionary<string, Action>();
 	private Dictionary<string, Action> init_when_change_state_fns = new Dictionary<string, Action>();
 	private Dictionary<string, object> blackboard = new Dictionary<string, object>();
@@ -43,6 +48,16 @@ public partial class BSystemLiteCs : Node
 		var current_state = blackboard["current_state"] as string;
 		Action state_fn = state_fns[current_state];
 		state_fn();
+	}
+
+	public virtual void SetBlackboard(string key, object value)
+	{
+		blackboard[key] = value;
+	}
+
+	public virtual object GetBlackboard(string key)
+	{
+		return blackboard[key];
 	}
 
 }

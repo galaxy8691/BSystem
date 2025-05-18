@@ -1,9 +1,9 @@
 [gd_scene load_steps=8 format=3 uid="uid://brfbjk0gaftx0"]
 
 [ext_resource type="Script" uid="uid://cc4cnwawqwbvc" path="res://level/TestCS/test_lite_cs.gd" id="1_wogdj"]
-[ext_resource type="Script" uid="uid://d1ln2mgy8k6lh" path="res://level/Test2/rotate_b_system_lite.gd" id="2_kmv4o"]
+[ext_resource type="Script" uid="uid://d2jxn40kwoojq" path="res://level/TestCS/RotateBSystemLiteCs.cs" id="2_wogdj"]
 [ext_resource type="Texture2D" uid="uid://dfrjkbsd8y6t6" path="res://icon.svg" id="3_4t054"]
-[ext_resource type="Script" uid="uid://c1gl5qvpbq8xa" path="res://level/Test2/idle_b_system_lite.gd" id="4_ba0d0"]
+[ext_resource type="Script" uid="uid://x0dej14aqtub" path="res://level/TestCS/IdleBSystemLiteCs.cs" id="5_kmv4o"]
 
 [sub_resource type="Animation" id="Animation_owy5b"]
 length = 0.001
@@ -44,11 +44,11 @@ _data = {
 [node name="TestLiteCS" type="Node2D"]
 script = ExtResource("1_wogdj")
 
-[node name="RotateBSystemLite" type="Node" parent="." node_paths=PackedStringArray("actor")]
-script = ExtResource("2_kmv4o")
-actor = NodePath("..")
-init_state = "Clockwise"
-metadata/_custom_type_script = "uid://w1hr40vjsbhk"
+[node name="RotateBSystemLiteCs" type="Node" parent="." node_paths=PackedStringArray("Actor")]
+script = ExtResource("2_wogdj")
+Actor = NodePath("..")
+InitState = "Clockwise"
+metadata/_custom_type_script = "uid://ugkfuyqkh72j"
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 position = Vector2(422, 292)
@@ -59,8 +59,8 @@ libraries = {
 &"": SubResource("AnimationLibrary_8aybj")
 }
 
-[node name="IdleBSystemLite" type="Node" parent="." node_paths=PackedStringArray("actor")]
-script = ExtResource("4_ba0d0")
-actor = NodePath("..")
-init_state = "Idle"
-metadata/_custom_type_script = "uid://w1hr40vjsbhk"
+[node name="IdleBSystemLiteCs" type="Node" parent="." node_paths=PackedStringArray("Actor")]
+script = ExtResource("5_kmv4o")
+Actor = NodePath("..")
+InitState = "Idle"
+metadata/_custom_type_script = "uid://ugkfuyqkh72j"
