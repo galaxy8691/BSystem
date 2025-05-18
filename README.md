@@ -53,6 +53,7 @@ Before designing behavior trees, you should carefully analyze the behavior requi
 As a user, you only need to understand and use the following components:
 
 ### Standard Behavior Tree (Full Features)
+
 - **BSystem**: The root node of the behavior tree, manages the execution and state of the entire behavior tree, **must set actor and init_state**
 - **BSequence**: Executes child nodes in sequence until encountering a failure or all succeed
 - **BSelector**: Selects a child node to execute until finding a successful node
@@ -61,6 +62,7 @@ As a user, you only need to understand and use the following components:
 - **BAction**: Leaf node that executes specific behaviors, **must implement tick method**
 
 ### Lightweight State Machine
+
 - **BSystemLite**: Simplified state machine system for more direct state control, **must set actor and init_state**
 
 Other classes (such as BNode, BComposite, BStateComposite, etc.) are internal implementations of the system and users don't need to use them directly.
@@ -85,7 +87,7 @@ func _init_call():
     # Register states with their handler functions and init functions
     insert_state("Idle", idle_state, idle_init)
     insert_state("Move", move_state, move_init)
-    
+
     # Optionally define the relationship between states
     insert_state_last_type("Idle", "Move")
 
@@ -99,13 +101,13 @@ func idle_state():
 func idle_init():
     # Initialization logic when entering Idle state
     blackboard["some_value"] = 0
-    
+
 # State handler function for Move state
 func move_state():
     # State logic here
     if reached_destination:
         change_state("Idle")
-        
+
 # State initialization function for Move state
 func move_init():
     # Initialization logic when entering Move state
@@ -114,17 +116,18 @@ func move_init():
 
 ### BSystemLite vs. Full BSystem
 
-| Feature | BSystemLite | BSystem |
-|---------|-------------|---------|
-| Complexity | Low (direct state functions) | High (tree structure) |
+| Feature     | BSystemLite                     | BSystem                         |
+| ----------- | ------------------------------- | ------------------------------- |
+| Complexity  | Low (direct state functions)    | High (tree structure)           |
 | Performance | More efficient for simple tasks | Optimized for complex behaviors |
-| Structure | Flat state machine | Hierarchical behavior tree |
-| Use Case | Simple state-based control | Complex AI behaviors |
-| Setup | Direct function definitions | Node hierarchy construction |
+| Structure   | Flat state machine              | Hierarchical behavior tree      |
+| Use Case    | Simple state-based control      | Complex AI behaviors            |
+| Setup       | Direct function definitions     | Node hierarchy construction     |
 
 ### When to Use BSystemLite
 
 Use BSystemLite when:
+
 - You have a simple state machine with a few states
 - You want direct control over state logic
 - Performance is critical
@@ -135,6 +138,7 @@ Use BSystemLite when:
 All nodes inheriting from BNode (including BSystem, BSequence, BSelector, BStateSequence, BStateSelector, and BAction) provide the following common methods:
 
 ### State Management
+
 - **set_current_state(state: String)**: Call from any node to switch the system's current state
   ```gdscript
   # Switch state from any BNode subclass
@@ -150,10 +154,10 @@ The blackboard is a shared dictionary that can be accessed directly from any nod
 func tick(actor, blackboard) -> BType.ActionType:
     # Read from blackboard
     var health = blackboard["player_health"]
-    
+
     # Write to blackboard
     blackboard["target_found"] = true
-    
+
     return BType.ActionType.SUCCESS
 ```
 
@@ -164,6 +168,7 @@ The blackboard is automatically passed to all nodes during execution, making dat
 You can call BSystem methods directly from external sources (game logic) to control the behavior tree:
 
 #### Switching States
+
 ```gdscript
 # Switch AI state from game logic
 func _on_player_detected():
@@ -174,6 +179,7 @@ func _on_player_lost():
 ```
 
 #### Accessing Blackboard Data
+
 You can also directly access and modify BSystem's blackboard data from external sources:
 
 ```gdscript
@@ -257,17 +263,191 @@ func counterclockwise_init():
     pass
 ```
 
-Setup in the scene:
+## BSystemLiteCs - C# Version of Lightweight State Machine
+
+BSystemLiteCs provides a C# implementation of the lightweight state machine. This allows you to write your state management logic in C# while maintaining the same design principles as the GDScript version. **One of the main purposes of BSystemLiteCs is to further improve performance** by leveraging C#'s static typing and more efficient execution in computation-intensive tasks.
+
+### Comparison of BSystemLite, BSystemLiteCs and Full BSystem
+
+| Feature          | BSystemLite                  | BSystemLiteCs                             | BSystem                         |
+| ---------------- | ---------------------------- | ----------------------------------------- | ------------------------------- |
+| Complexity       | Low (direct state functions) | Low (direct state methods)                | High (tree structure)           |
+| Performance      | Good for simple tasks        | Better for computation-heavy tasks        | Optimized for complex behaviors |
+| Structure        | Flat state machine           | Flat state machine                        | Hierarchical behavior tree      |
+| Language         | GDScript                     | C#                                        | GDScript                        |
+| Type Safety      | Dynamic typing               | Static typing                             | Dynamic typing                  |
+| Interoperability | Native with GDScript         | Requires bridge methods for some features | Native with GDScript            |
+| Use Case         | Simple state-based control   | Performance-critical state control        | Complex AI behaviors            |
+| Setup            | Direct function definitions  | Direct method definitions                 | Node hierarchy construction     |
+
+### Using BSystemLiteCs
+
+To use BSystemLiteCs, you need to:
+
+1. Extend the BSystemLiteCs class
+2. Override the `InitCall()` method to register your states
+3. Define state methods and initialization methods
+4. Add state transitions using the `ChangeState()` method
+
+```csharp
+using Godot;
+using System;
+
+public partial class MyBSystemLiteCs : BSystemLiteCs
+{
+    protected override void InitCall()
+    {
+        // Register states with their handler methods and init methods
+        InsertState("Idle", IdleState, IdleInit);
+        InsertState("Move", MoveState, MoveInit);
+    }
+
+    // State handler method for Idle state
+    public void IdleState()
+    {
+        // State logic here
+        if (SomeCondition())
+        {
+            ChangeState("Move");
+        }
+    }
+
+    // State initialization method for Idle state
+    public void IdleInit()
+    {
+        // Initialization logic when entering Idle state
+        SetBlackboard("some_value", 0);
+    }
+
+    // State handler method for Move state
+    public void MoveState()
+    {
+        // State logic here
+        if (ReachedDestination())
+        {
+            ChangeState("Idle");
+        }
+    }
+
+    // State initialization method for Move state
+    public void MoveInit()
+    {
+        // Initialization logic when entering Move state
+        SetBlackboard("move_started", true);
+    }
+
+    private bool SomeCondition()
+    {
+        // Implementation
+        return false;
+    }
+
+    private bool ReachedDestination()
+    {
+        // Implementation
+        return false;
+    }
+}
+```
+
+### Blackboard Data in C#
+
+The C# implementation provides methods to access the blackboard data:
+
+```csharp
+// Set blackboard data
+SetBlackboard("key", value);
+
+// Get blackboard data (requires casting)
+var value = (int)GetBlackboard("key");
+var state = (ThreeStateBool)GetBlackboard("state_value");
+```
+
+### Three-State Boolean in C#
+
+BSystemLiteCs includes an enum for the three-state boolean:
+
+```csharp
+public enum ThreeStateBool
+{
+    TRUE = 0,
+    FALSE = 1,
+    NOTSET = 2
+}
+```
+
+### Interoperability with GDScript
+
+When using BSystemLiteCs from GDScript, you need to be aware of the following:
+
+1. Only methods directly defined in your derived class are accessible from GDScript
+2. Methods inherited from BSystemLiteCs (like `SetBlackboard` and `GetBlackboard`) must be exposed with bridge methods:
+
+```csharp
+// Bridge method to expose inherited functionality
+public void SetBoardValue(string key, object value)
+{
+    SetBlackboard(key, value);
+}
+```
+
+Then in GDScript:
 
 ```gdscript
-# In your scene setup:
-@onready var rotate_system = $RotateBSystemLite
+# Now you can call the bridge method from GDScript
+my_system.SetBoardValue("key", value)
+```
 
-func _ready():
-    # The actor and init_state should be set in the inspector
-    # rotate_system.actor = self
-    # rotate_system.init_state = "Clockwise"
-    pass
+### BSystemLiteCs Example
+
+Here's a complete example of using BSystemLiteCs for a rotating object:
+
+```csharp
+using Godot;
+using System;
+
+public partial class RotateBSystemLiteCs : BSystemLiteCs
+{
+    protected override void InitCall()
+    {
+        InsertState("Clockwise", ClockwiseState, ClockwiseInit);
+        InsertState("CounterClockwise", CounterClockwiseState, CounterClockwiseInit);
+    }
+
+    public void ClockwiseState()
+    {
+        if ((int)Actor.Get("rotate_times") >= 200)
+        {
+            ChangeState("CounterClockwise");
+        }
+        else
+        {
+            Actor.Call("rotate_clockwise_180");
+        }
+    }
+
+    public void ClockwiseInit()
+    {
+        // No special initialization needed
+    }
+
+    public void CounterClockwiseState()
+    {
+        if ((int)Actor.Get("rotate_times") == 0)
+        {
+            ChangeState("Clockwise");
+        }
+        else
+        {
+            Actor.Call("rotate_counterclockwise_180");
+        }
+    }
+
+    public void CounterClockwiseInit()
+    {
+        // No special initialization needed
+    }
+}
 ```
 
 ## Multi-System Collaboration Example
@@ -284,29 +464,29 @@ func _ready():
     movement_system.actor = self
     movement_system.init_state = "State_Idle"
     movement_system.name = "MovementSystem"
-    
+
     # Create and set up vision system
     var vision_system = BSystem.new()
     vision_system.actor = self
     vision_system.init_state = "State_LookAround"
     vision_system.name = "VisionSystem"
-    
+
     # Add to character
     add_child(movement_system)
     add_child(vision_system)
-    
+
     # Create state sequence for movement system
     var walk_sequence = BStateSequence.new()
     walk_sequence.state = "State_Walking"
-    
+
     # Create state sequence for vision system
     var scan_sequence = BStateSequence.new()
     scan_sequence.state = "State_Scanning"
-    
+
     # Add to respective systems
     movement_system.add_child(walk_sequence)
     vision_system.add_child(scan_sequence)
-    
+
     # Can switch states of each system independently
     movement_system.change_state("Walking")
     vision_system.change_state("Scanning")
@@ -328,20 +508,21 @@ class_name MyAction extends BAction
 #   Must return one of the BType.ActionType enum values
 func tick(actor: Node, blackboard: Dictionary, fn_change_state: Callable) -> BType.ActionType:
     # Implement specific behavior logic
-    
+
     # To change state from within tick:
     if some_condition:
         fn_change_state.call("NewState")
-    
+
     # Return corresponding status based on behavior execution:
     # Successfully completed behavior -> SUCCESS
     # Execution failed -> FAILURE
     # Currently executing -> RUNNING
-    
+
     return BType.ActionType.SUCCESS
 ```
 
 Each BAction's `tick` method should return one of the following three states:
+
 - **SUCCESS**: Behavior successfully completed
 - **FAILURE**: Behavior execution failed
 - **RUNNING**: Behavior is currently executing, will continue execution in the next frame
@@ -349,6 +530,7 @@ Each BAction's `tick` method should return one of the following three states:
 ## State Naming Rules
 
 When using BStateSequence and BStateSelector, you **must** set their state property. state name format should be:
+
 - Recommended to use the `"State_stateName"` format, such as `"State_Patrol"`, `"State_Combat"`
 - The system will automatically handle adding the `"State_"` prefix, so when using the `change_state()` method, you only need to pass the state name part (such as `"Patrol"` instead of `"State_Patrol"`)
 
@@ -377,14 +559,18 @@ The system will automatically call the `_init_when_change_state` method of the m
 B System provides two important enum types:
 
 ### ActionType
+
 Status type of behavior node execution results:
+
 - **SUCCESS**: Execution successful
 - **FAILURE**: Execution failed
 - **RUNNING**: Currently executing
 - **NOTSET**: Status not set
 
 ### ThreeStateBool
+
 Three-state boolean type:
+
 - **TRUE**: True
 - **FALSE**: False
 - **NOTSET**: Status not set
@@ -443,13 +629,13 @@ class MoveToPointAction extends BAction:
         var points = blackboard["patrol_points"]
         var current_index = blackboard["current_point_index"]
         var target = points[current_index]
-        
+
         var distance = actor.global_position.distance_to(target)
         if distance < 10:
             # Reached target point, move to next point
             blackboard["current_point_index"] = (current_index + 1) % points.size()
             return BType.ActionType.SUCCESS
-            
+
         # Move towards target point
         var direction = (target - actor.global_position).normalized()
         actor.velocity = direction * actor.speed
@@ -476,7 +662,7 @@ class FindTargetAction extends BAction:
         if target:
             # Set blackboard data directly
             blackboard["current_target"] = target
-            
+
             # Switch state using the provided callable
             fn_change_state.call("Combat")
             return BType.ActionType.SUCCESS
@@ -495,11 +681,11 @@ func tick(actor: CharacterBody2D, blackboard: Dictionary, fn_change_state: Calla
     var target_position = blackboard.get("target_position")
     if not target_position:
         return BType.ActionType.FAILURE
-        
+
     var direction = (target_position - actor.global_position).normalized()
     if actor.global_position.distance_to(target_position) < 10:
         return BType.ActionType.SUCCESS
-        
+
     actor.velocity = direction * actor.speed
     actor.move_and_slide()
     return BType.ActionType.RUNNING
@@ -512,13 +698,13 @@ func tick(actor: Node, blackboard: Dictionary, fn_change_state: Callable) -> BTy
         # Target lost, switch to search state
         fn_change_state.call("Search")
         return BType.ActionType.FAILURE
-        
+
     if actor.global_position.distance_to(target.global_position) > actor.attack_range:
         return BType.ActionType.FAILURE
-        
+
     if not actor.can_attack():
         return BType.ActionType.RUNNING
-        
+
     actor.attack(target)
     return BType.ActionType.SUCCESS
 
@@ -530,9 +716,9 @@ var duration: float = 2.0
 func tick(actor: Node, blackboard: Dictionary, fn_change_state: Callable) -> BType.ActionType:
     if wait_timer <= 0:
         wait_timer = duration
-        
+
     wait_timer -= get_process_delta_time()
-    
+
     if wait_timer <= 0:
         return BType.ActionType.SUCCESS
     else:
@@ -541,4 +727,4 @@ func tick(actor: Node, blackboard: Dictionary, fn_change_state: Callable) -> BTy
 
 ## License
 
-Please refer to the LICENSE file in the project for license information. 
+Please refer to the LICENSE file in the project for license information.
