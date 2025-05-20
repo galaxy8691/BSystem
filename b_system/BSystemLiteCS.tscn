@@ -1,13 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://b2lghxkn77k4p"]
 
-[sub_resource type="CSharpScript" id="CSharpScript_ln1ck"]
-script/source = "using Godot;
-using System;
-
-public partial class BSystemLiteCs : Node
-{
-}
-"
+[ext_resource type="Script" uid="uid://ugkfuyqkh72j" path="res://b_system/scripts/BSystemLiteCs.cs" id="1_nambf"]
 
 [node name="BSystemLiteCs" type="Node"]
-script = SubResource("CSharpScript_ln1ck")
+script = ExtResource("1_nambf")
