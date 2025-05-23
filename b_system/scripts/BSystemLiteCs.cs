@@ -5,6 +5,36 @@ using System.Collections.Generic;
 [GlobalClass]
 public partial class BSystemLiteCs : Node
 {
+
+	public abstract class PackedState{
+		private string m_State;
+		private Node m_Actor;
+		private Action<string> m_ChangeStateFn;
+		protected Dictionary<string, object> m_Blackboard;
+
+		public PackedState(string state, Node actor, Action<string> change_state_fn, Dictionary<string, object> blackboard){
+			m_State = state;
+			m_Actor = actor;
+			m_ChangeStateFn = change_state_fn;
+			m_Blackboard = blackboard;
+		}
+
+		public void ChangeState(string state){
+			m_ChangeStateFn(state);
+		}
+
+		public Node GetActor(){
+			return m_Actor;
+		}
+
+		public string GetState(){
+			return m_State;
+		}
+
+		public abstract void StateFn();
+
+		public abstract void InitWhenChangeStateFn();
+	}
 	[Export]
 	public bool DisabledOnMpMode = false;
 
@@ -13,9 +43,9 @@ public partial class BSystemLiteCs : Node
 	FALSE = 1,
 	NOTSET = 2
 	}
-	private Dictionary<string, Action> m_StateFns = new Dictionary<string, Action>();
-	private Dictionary<string, Action> m_InitWhenChangeStateFns = new Dictionary<string, Action>();
-	private Dictionary<string, object> m_Blackboard = new Dictionary<string, object>();
+	private Dictionary<string, PackedState> m_StateFns = new Dictionary<string, PackedState>();
+	// private Dictionary<string, Action> m_InitWhenChangeStateFns = new Dictionary<string, Action>();
+	protected Dictionary<string, object> m_Blackboard = new Dictionary<string, object>();
 
 	[Export]
 	public Node Actor { get; set; }
@@ -33,10 +63,10 @@ public partial class BSystemLiteCs : Node
 		ChangeState(InitState);
 	}
 
-	public void InsertState(string state, Action fn, Action init_fn)
+	public void InsertState(PackedState packed_state)
 	{
-		m_StateFns[state] = fn;
-		m_InitWhenChangeStateFns[state] = init_fn;
+		var state = packed_state.GetState();
+		m_StateFns[state] = packed_state;
 	}
 
 	protected virtual void InitCall()
@@ -49,17 +79,17 @@ public partial class BSystemLiteCs : Node
 			return;
 		}
 		m_Blackboard["current_state"] = state;
-		Action init_when_change_state_fn = m_InitWhenChangeStateFns[state];
-		if (init_when_change_state_fn != null){
-			init_when_change_state_fn();
+		PackedState packed_state = m_StateFns[state];
+		if (packed_state != null){
+			packed_state.InitWhenChangeStateFn();
 		}
 	}
 
 	public override void _PhysicsProcess(double delta)
 	{
 		var current_state = m_Blackboard["current_state"] as string;
-		Action state_fn = m_StateFns[current_state];
-		state_fn();
+		PackedState packed_state = m_StateFns[current_state];
+		packed_state.StateFn();
 	}
 
 	public virtual void SetBlackboard(string key, object value)
