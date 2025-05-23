@@ -27,7 +27,7 @@ func change_state(state: String):
 func _init_call():
 	pass
 
-func _physics_process(delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	var current_state = blackboard.get("current_state")
 	var state_fn = state_fns.get(current_state)
 	state_fn.call()
