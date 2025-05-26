@@ -53,6 +53,12 @@ public partial class BSystemLiteCs : Node
 	[Export]
 	public string InitState { get; set; }
 
+	public string CurrentState{
+		get{
+			return m_Blackboard["current_state"] as string;
+		}
+	}
+
 	public override void _Ready()
 	{
 		if (DisabledOnMpMode && !IsMultiplayerAuthority()){
