@@ -14,7 +14,7 @@ public partial class RotateBSystemLiteCs : BSystemLiteCs
 
 		public override void StateFn()
 		{
-			if ((int)GetActor().Get("rotate_times") >= 200)
+			if ((int)GetActor().Get("rotate_times") >= (int) GetActor().Get("rotate_max_times"))
 			{
 				ChangeState("CounterClockwise");
 			}
@@ -54,7 +54,7 @@ public partial class RotateBSystemLiteCs : BSystemLiteCs
 	protected override void InitCall()
 	{
 		InsertState(new FnState("Clockwise", Actor, ChangeState, m_Blackboard, () => {
-			if ((int)Actor.Get("rotate_times") >= 200)
+			if ((int)Actor.Get("rotate_times") >= (int) Actor.Get("rotate_max_times"))
 			{
 				ChangeState("CounterClockwise");
 			}

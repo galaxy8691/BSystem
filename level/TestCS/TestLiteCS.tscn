@@ -43,6 +43,7 @@ _data = {
 
 [node name="TestLiteCS" type="Node2D"]
 script = ExtResource("1_wogdj")
+rotate_max_times = 100
 
 [node name="RotateBSystemLiteCs" type="Node" parent="." node_paths=PackedStringArray("Actor")]
 script = ExtResource("2_wogdj")

@@ -1,7 +1,7 @@
 extends Node2D
 
 var rotate_times: int = 0
-var rotate_max_times: int = 3
+@export var rotate_max_times: int = 3
 @onready var sprite: Sprite2D = $Sprite2D
 var target_position: Vector2 = Vector2(0, 0)
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
