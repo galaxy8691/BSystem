@@ -53,7 +53,18 @@ public partial class RotateBSystemLiteCs : BSystemLiteCs
 	
 	protected override void InitCall()
 	{
-		InsertState(new ClockwiseState(Actor, ChangeState, m_Blackboard));
+		InsertState(new FnState("Clockwise", Actor, ChangeState, m_Blackboard, () => {
+			if ((int)Actor.Get("rotate_times") >= 200)
+			{
+				ChangeState("CounterClockwise");
+			}
+			else
+			{
+				Actor.Call("rotate_clockwise_180");
+			}
+		}, () => {
+		}));
+		// InsertState(new ClockwiseState(Actor, ChangeState, m_Blackboard));
 		InsertState(new CounterClockwiseState(Actor, ChangeState, m_Blackboard));
 	}
 
