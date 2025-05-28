@@ -271,14 +271,15 @@ BSystemLiteCs provides a C# implementation of the lightweight state machine. Thi
 
 | Feature          | BSystemLite                  | BSystemLiteCs                             | BSystem                         |
 | ---------------- | ---------------------------- | ----------------------------------------- | ------------------------------- |
-| Complexity       | Low (direct state functions) | Low (direct state methods)                | High (tree structure)           |
+| Complexity       | Low (direct state functions) | Low (PackedState/FnState classes)         | High (tree structure)           |
 | Performance      | Good for simple tasks        | Better for computation-heavy tasks        | Optimized for complex behaviors |
 | Structure        | Flat state machine           | Flat state machine                        | Hierarchical behavior tree      |
 | Language         | GDScript                     | C#                                        | GDScript                        |
 | Type Safety      | Dynamic typing               | Static typing                             | Dynamic typing                  |
+| Code Organization| Function-based               | Class-based (PackedState/FnState)         | Node-based                      |
 | Interoperability | Native with GDScript         | Requires bridge methods for some features | Native with GDScript            |
 | Use Case         | Simple state-based control   | Performance-critical state control        | Complex AI behaviors            |
-| Setup            | Direct function definitions  | Direct method definitions                 | Node hierarchy construction     |
+| Setup            | Direct function definitions  | PackedState/FnState definitions           | Node hierarchy construction     |
 
 ### Using BSystemLiteCs
 
@@ -289,6 +290,89 @@ To use BSystemLiteCs, you need to:
 3. Define state methods and initialization methods
 4. Add state transitions using the `ChangeState()` method
 
+#### Method 1: PackedState Classes (Recommended)
+
+**PackedState** provides a more object-oriented approach to writing state logic. Each state is defined as a separate class that inherits from `PackedState`, making the code more organized and easier to maintain.
+
+```csharp
+using Godot;
+using System;
+
+public partial class MyBSystemLiteCs : BSystemLiteCs
+{
+    // Define Idle state as a separate class
+    public class IdleState : PackedState
+    {
+        public IdleState(Node actor, Action<string> change_state_fn, Dictionary<string, object> blackboard) 
+            : base("Idle", actor, change_state_fn, blackboard)
+        {
+        }
+
+        public override void StateFn()
+        {
+            // State logic here
+            if (SomeCondition())
+            {
+                ChangeState("Move");
+            }
+        }
+
+        public override void InitWhenChangeStateFn()
+        {
+            // Initialization logic when entering Idle state
+            m_Blackboard["some_value"] = 0;
+        }
+
+        private bool SomeCondition()
+        {
+            // Implementation logic
+            return false;
+        }
+    }
+
+    // Define Move state as a separate class
+    public class MoveState : PackedState
+    {
+        public MoveState(Node actor, Action<string> change_state_fn, Dictionary<string, object> blackboard) 
+            : base("Move", actor, change_state_fn, blackboard)
+        {
+        }
+
+        public override void StateFn()
+        {
+            // State logic here
+            if (ReachedDestination())
+            {
+                ChangeState("Idle");
+            }
+        }
+
+        public override void InitWhenChangeStateFn()
+        {
+            // Initialization logic when entering Move state
+            m_Blackboard["move_started"] = true;
+        }
+
+        private bool ReachedDestination()
+        {
+            // Implementation logic
+            return false;
+        }
+    }
+
+    protected override void InitCall()
+    {
+        // Register PackedState instances
+        InsertState(new IdleState(Actor, ChangeState, m_Blackboard));
+        InsertState(new MoveState(Actor, ChangeState, m_Blackboard));
+    }
+}
+```
+
+#### Method 2: FnState Classes (Function-Style)
+
+**FnState** provides a bridge between the legacy function-style approach and the new PackedState system. It allows you to use lambda expressions or method references while still benefiting from the PackedState architecture.
+
 ```csharp
 using Godot;
 using System;
@@ -297,13 +381,13 @@ public partial class MyBSystemLiteCs : BSystemLiteCs
 {
     protected override void InitCall()
     {
-        // Register states with their handler methods and init methods
-        InsertState("Idle", IdleState, IdleInit);
-        InsertState("Move", MoveState, MoveInit);
+        // Register states using FnState with lambda expressions
+        InsertState(new FnState("Idle", Actor, ChangeState, m_Blackboard, IdleStateFn, IdleInitFn));
+        InsertState(new FnState("Move", Actor, ChangeState, m_Blackboard, MoveStateFn, MoveInitFn));
     }
 
-    // State handler method for Idle state
-    public void IdleState()
+    // State logic methods
+    private void IdleStateFn()
     {
         // State logic here
         if (SomeCondition())
@@ -312,15 +396,13 @@ public partial class MyBSystemLiteCs : BSystemLiteCs
         }
     }
 
-    // State initialization method for Idle state
-    public void IdleInit()
+    private void IdleInitFn()
     {
         // Initialization logic when entering Idle state
         SetBlackboard("some_value", 0);
     }
 
-    // State handler method for Move state
-    public void MoveState()
+    private void MoveStateFn()
     {
         // State logic here
         if (ReachedDestination())
@@ -329,11 +411,40 @@ public partial class MyBSystemLiteCs : BSystemLiteCs
         }
     }
 
-    // State initialization method for Move state
-    public void MoveInit()
+    private void MoveInitFn()
     {
         // Initialization logic when entering Move state
         SetBlackboard("move_started", true);
+    }
+
+    // Alternative: Using lambda expressions directly
+    protected void InitCallWithLambdas()
+    {
+        InsertState(new FnState("Idle", Actor, ChangeState, m_Blackboard, 
+            () => {
+                // Idle state logic
+                if (SomeCondition())
+                {
+                    ChangeState("Move");
+                }
+            },
+            () => {
+                // Idle initialization
+                SetBlackboard("some_value", 0);
+            }));
+
+        InsertState(new FnState("Move", Actor, ChangeState, m_Blackboard,
+            () => {
+                // Move state logic
+                if (ReachedDestination())
+                {
+                    ChangeState("Idle");
+                }
+            },
+            () => {
+                // Move initialization
+                SetBlackboard("move_started", true);
+            }));
     }
 
     private bool SomeCondition()
@@ -349,6 +460,80 @@ public partial class MyBSystemLiteCs : BSystemLiteCs
     }
 }
 ```
+
+### Benefits of Different Approaches
+
+#### PackedState Classes (Method 1)
+Using PackedState classes provides several advantages:
+
+1. **Better Code Organization**: Each state is encapsulated in its own class
+2. **Improved Maintainability**: State-specific logic is contained within the state class
+3. **Enhanced Readability**: Clear separation between different states
+4. **Easier Testing**: Individual state classes can be tested independently
+5. **Reusability**: State classes can be reused across different systems
+
+#### FnState Classes (Method 2)
+Using FnState provides a functional programming approach:
+
+1. **Familiar Syntax**: Similar to traditional function-style approaches
+2. **Flexibility**: Can use both method references and lambda expressions
+3. **Concise Code**: Less boilerplate code compared to full PackedState classes
+4. **Easy Migration**: Simple transition from legacy function-style code
+5. **Functional Programming**: Supports functional programming paradigms
+
+#### Comparison of the Two Methods
+
+| Aspect | PackedState Classes | FnState Classes |
+|--------|-------------------|-----------------|
+| Code Organization | Separate state classes | Functions/lambdas |
+| Maintainability | Excellent | Good |
+| Readability | Excellent | Good |
+| Reusability | High | Moderate |
+| Testing | Easy | Moderate |
+| Best For | Complex state machines | Function-style developers |
+
+### PackedState Base Class
+
+The `PackedState` abstract class provides the following functionality:
+
+```csharp
+public abstract class PackedState
+{
+    // Constructor
+    public PackedState(string state, Node actor, Action<string> change_state_fn, Dictionary<string, object> blackboard);
+    
+    // Methods available to derived classes
+    public void ChangeState(string state);           // Change to another state
+    public Node GetActor();                          // Get the actor node
+    public string GetState();                        // Get the state name
+    
+    // Abstract methods that must be implemented
+    public abstract void StateFn();                  // State logic execution
+    public abstract void InitWhenChangeStateFn();    // State initialization
+    
+    // Protected members
+    protected Dictionary<string, object> m_Blackboard;  // Access to blackboard data
+}
+```
+
+### FnState Class
+
+The `FnState` class extends `PackedState` to support function-style state definitions:
+
+```csharp
+public class FnState : PackedState
+{
+    // Constructor
+    public FnState(string state, Node actor, Action<string> change_state_fn, 
+                   Dictionary<string, object> blackboard, Action fn, Action init_when_change_state_fn);
+    
+    // Automatically implemented methods that call the provided functions
+    public override void StateFn();                  // Calls the provided state function
+    public override void InitWhenChangeStateFn();    // Calls the provided init function
+}
+```
+
+This allows you to use the PackedState system while maintaining a function-based approach to state logic.
 
 ### Blackboard Data in C#
 
@@ -400,52 +585,72 @@ my_system.SetBoardValue("key", value)
 
 ### BSystemLiteCs Example
 
-Here's a complete example of using BSystemLiteCs for a rotating object:
+Here's a complete example of using BSystemLiteCs for a rotating object with PackedState classes:
 
 ```csharp
 using Godot;
 using System;
+using System.Collections.Generic;
 
 public partial class RotateBSystemLiteCs : BSystemLiteCs
 {
+    // Clockwise rotation state class
+    public class ClockwiseState : PackedState
+    {
+        public ClockwiseState(Node actor, Action<string> change_state_fn, Dictionary<string, object> blackboard) 
+            : base("Clockwise", actor, change_state_fn, blackboard)
+        {
+        }
+
+        public override void StateFn()
+        {
+            if ((int)GetActor().Get("rotate_times") >= 200)
+            {
+                ChangeState("CounterClockwise");
+            }
+            else
+            {
+                GetActor().Call("rotate_clockwise_180");
+            }
+        }
+
+        public override void InitWhenChangeStateFn()
+        {
+            // No special initialization needed
+        }
+    }
+
+    // Counter-clockwise rotation state class
+    public class CounterClockwiseState : PackedState
+    {
+        public CounterClockwiseState(Node actor, Action<string> change_state_fn, Dictionary<string, object> blackboard) 
+            : base("CounterClockwise", actor, change_state_fn, blackboard)
+        {
+        }
+
+        public override void StateFn()
+        {
+            if ((int)GetActor().Get("rotate_times") == 0)
+            {
+                ChangeState("Clockwise");
+            }
+            else
+            {
+                GetActor().Call("rotate_counterclockwise_180");
+            }
+        }
+
+        public override void InitWhenChangeStateFn()
+        {
+            // No special initialization needed
+        }
+    }
+
     protected override void InitCall()
     {
-        InsertState("Clockwise", ClockwiseState, ClockwiseInit);
-        InsertState("CounterClockwise", CounterClockwiseState, CounterClockwiseInit);
-    }
-
-    public void ClockwiseState()
-    {
-        if ((int)Actor.Get("rotate_times") >= 200)
-        {
-            ChangeState("CounterClockwise");
-        }
-        else
-        {
-            Actor.Call("rotate_clockwise_180");
-        }
-    }
-
-    public void ClockwiseInit()
-    {
-        // No special initialization needed
-    }
-
-    public void CounterClockwiseState()
-    {
-        if ((int)Actor.Get("rotate_times") == 0)
-        {
-            ChangeState("Clockwise");
-        }
-        else
-        {
-            Actor.Call("rotate_counterclockwise_180");
-        }
-    }
-
-    public void CounterClockwiseInit()
-    {
-        // No special initialization needed
+        // Register PackedState instances
+        InsertState(new ClockwiseState(Actor, ChangeState, m_Blackboard));
+        InsertState(new CounterClockwiseState(Actor, ChangeState, m_Blackboard));
     }
 }
 ```

@@ -139,16 +139,17 @@ BSystemLiteCs 提供了轻量级状态机的 C#实现。这使您可以使用 C#
 
 ### BSystemLite、BSystemLiteCs 与完整 BSystem 的比较
 
-| 功能     | BSystemLite          | BSystemLiteCs        | BSystem              |
-| -------- | -------------------- | -------------------- | -------------------- |
-| 复杂度   | 低（直接状态函数）   | 低（直接状态方法）   | 高（树结构）         |
-| 性能     | 适合简单任务         | 适合计算密集型任务   | 针对复杂行为优化     |
-| 结构     | 扁平状态机           | 扁平状态机           | 层次行为树           |
-| 语言     | GDScript             | C#                   | GDScript             |
-| 类型安全 | 动态类型             | 静态类型             | 动态类型             |
-| 互操作性 | 与 GDScript 原生兼容 | 部分功能需要桥接方法 | 与 GDScript 原生兼容 |
-| 使用场景 | 简单的基于状态的控制 | 性能关键的状态控制   | 复杂的 AI 行为       |
-| 设置     | 直接函数定义         | 直接方法定义         | 节点层次结构构建     |
+| 功能     | BSystemLite          | BSystemLiteCs                | BSystem              |
+| -------- | -------------------- | ---------------------------- | -------------------- |
+| 复杂度   | 低（直接状态函数）   | 低（PackedState/FnState类）  | 高（树结构）         |
+| 性能     | 适合简单任务         | 适合计算密集型任务           | 针对复杂行为优化     |
+| 结构     | 扁平状态机           | 扁平状态机                   | 层次行为树           |
+| 语言     | GDScript             | C#                           | GDScript             |
+| 类型安全 | 动态类型             | 静态类型                     | 动态类型             |
+| 代码组织 | 基于函数             | 基于类（PackedState/FnState）| 基于节点             |
+| 互操作性 | 与 GDScript 原生兼容 | 部分功能需要桥接方法         | 与 GDScript 原生兼容 |
+| 使用场景 | 简单的基于状态的控制 | 性能关键的状态控制           | 复杂的 AI 行为       |
+| 设置     | 直接函数定义         | PackedState/FnState 定义     | 节点层次结构构建     |
 
 ### 使用 BSystemLiteCs
 
@@ -159,6 +160,90 @@ BSystemLiteCs 提供了轻量级状态机的 C#实现。这使您可以使用 C#
 3. 定义状态方法和初始化方法
 4. 使用`ChangeState()`方法添加状态转换
 
+#### 方法一：PackedState 类（推荐）
+
+**PackedState** 提供了一种更面向对象的状态逻辑编写方法。每个状态都定义为继承自 `PackedState` 的独立类，使代码更加组织化和易于维护。
+
+```csharp
+using Godot;
+using System;
+using System.Collections.Generic;
+
+public partial class MyBSystemLiteCs : BSystemLiteCs
+{
+    // 将 Idle 状态定义为独立的类
+    public class IdleState : PackedState
+    {
+        public IdleState(Node actor, Action<string> change_state_fn, Dictionary<string, object> blackboard) 
+            : base("Idle", actor, change_state_fn, blackboard)
+        {
+        }
+
+        public override void StateFn()
+        {
+            // 状态逻辑
+            if (SomeCondition())
+            {
+                ChangeState("Move");
+            }
+        }
+
+        public override void InitWhenChangeStateFn()
+        {
+            // 进入 Idle 状态时的初始化逻辑
+            m_Blackboard["some_value"] = 0;
+        }
+
+        private bool SomeCondition()
+        {
+            // 实现逻辑
+            return false;
+        }
+    }
+
+    // 将 Move 状态定义为独立的类
+    public class MoveState : PackedState
+    {
+        public MoveState(Node actor, Action<string> change_state_fn, Dictionary<string, object> blackboard) 
+            : base("Move", actor, change_state_fn, blackboard)
+        {
+        }
+
+        public override void StateFn()
+        {
+            // 状态逻辑
+            if (ReachedDestination())
+            {
+                ChangeState("Idle");
+            }
+        }
+
+        public override void InitWhenChangeStateFn()
+        {
+            // 进入 Move 状态时的初始化逻辑
+            m_Blackboard["move_started"] = true;
+        }
+
+        private bool ReachedDestination()
+        {
+            // 实现逻辑
+            return false;
+        }
+    }
+
+    protected override void InitCall()
+    {
+        // 注册 PackedState 实例
+        InsertState(new IdleState(Actor, ChangeState, m_Blackboard));
+        InsertState(new MoveState(Actor, ChangeState, m_Blackboard));
+    }
+}
+```
+
+#### 方法二：FnState 类（函数式风格）
+
+**FnState** 在传统函数式方法和新的 PackedState 系统之间提供了桥梁。它允许您使用 lambda 表达式或方法引用，同时仍然受益于 PackedState 架构。
+
 ```csharp
 using Godot;
 using System;
@@ -167,13 +252,13 @@ public partial class MyBSystemLiteCs : BSystemLiteCs
 {
     protected override void InitCall()
     {
-        // 注册状态及其处理方法和初始化方法
-        InsertState("Idle", IdleState, IdleInit);
-        InsertState("Move", MoveState, MoveInit);
+        // 使用 FnState 和方法引用注册状态
+        InsertState(new FnState("Idle", Actor, ChangeState, m_Blackboard, IdleStateFn, IdleInitFn));
+        InsertState(new FnState("Move", Actor, ChangeState, m_Blackboard, MoveStateFn, MoveInitFn));
     }
 
-    // Idle状态的处理方法
-    public void IdleState()
+    // 状态逻辑方法
+    private void IdleStateFn()
     {
         // 状态逻辑
         if (SomeCondition())
@@ -182,15 +267,13 @@ public partial class MyBSystemLiteCs : BSystemLiteCs
         }
     }
 
-    // Idle状态的初始化方法
-    public void IdleInit()
+    private void IdleInitFn()
     {
-        // 进入Idle状态时的初始化逻辑
+        // 进入 Idle 状态时的初始化逻辑
         SetBlackboard("some_value", 0);
     }
 
-    // Move状态的处理方法
-    public void MoveState()
+    private void MoveStateFn()
     {
         // 状态逻辑
         if (ReachedDestination())
@@ -199,11 +282,40 @@ public partial class MyBSystemLiteCs : BSystemLiteCs
         }
     }
 
-    // Move状态的初始化方法
-    public void MoveInit()
+    private void MoveInitFn()
     {
-        // 进入Move状态时的初始化逻辑
+        // 进入 Move 状态时的初始化逻辑
         SetBlackboard("move_started", true);
+    }
+
+    // 替代方案：直接使用 lambda 表达式
+    protected void InitCallWithLambdas()
+    {
+        InsertState(new FnState("Idle", Actor, ChangeState, m_Blackboard, 
+            () => {
+                // Idle 状态逻辑
+                if (SomeCondition())
+                {
+                    ChangeState("Move");
+                }
+            },
+            () => {
+                // Idle 初始化
+                SetBlackboard("some_value", 0);
+            }));
+
+        InsertState(new FnState("Move", Actor, ChangeState, m_Blackboard,
+            () => {
+                // Move 状态逻辑
+                if (ReachedDestination())
+                {
+                    ChangeState("Idle");
+                }
+            },
+            () => {
+                // Move 初始化
+                SetBlackboard("move_started", true);
+            }));
     }
 
     private bool SomeCondition()
@@ -219,6 +331,82 @@ public partial class MyBSystemLiteCs : BSystemLiteCs
     }
 }
 ```
+
+### 不同方法的优势
+
+#### PackedState 类的优势（方法一）
+
+使用 PackedState 类提供了以下优势：
+
+1. **更好的代码组织**：每个状态都封装在自己的类中
+2. **提高可维护性**：状态特定的逻辑包含在状态类内部
+3. **增强可读性**：不同状态之间有清晰的分离
+4. **更容易测试**：单个状态类可以独立测试
+5. **可重用性**：状态类可以在不同系统中重用
+
+#### FnState 类的优势（方法二）
+
+使用 FnState 提供了函数式编程方法：
+
+1. **熟悉的语法**：类似于传统函数式方法
+2. **灵活性**：可以使用方法引用和 lambda 表达式
+3. **简洁的代码**：相比完整的 PackedState 类，样板代码更少
+4. **易于迁移**：从传统函数式代码简单过渡
+5. **函数式编程**：支持函数式编程范式
+
+### 两种方法的比较
+
+| 方面     | PackedState 类   | FnState 类       |
+| -------- | ---------------- | ---------------- |
+| 代码组织 | 独立的状态类     | 函数/lambda      |
+| 可维护性 | 优秀             | 良好             |
+| 可读性   | 优秀             | 良好             |
+| 可重用性 | 高               | 中等             |
+| 测试     | 容易             | 中等             |
+| 最适合   | 复杂状态机       | 函数式风格开发者 |
+
+### PackedState 基类
+
+`PackedState` 抽象类提供以下功能：
+
+```csharp
+public abstract class PackedState
+{
+    // 构造函数
+    public PackedState(string state, Node actor, Action<string> change_state_fn, Dictionary<string, object> blackboard);
+    
+    // 派生类可用的方法
+    public void ChangeState(string state);           // 切换到另一个状态
+    public Node GetActor();                          // 获取 actor 节点
+    public string GetState();                        // 获取状态名称
+    
+    // 必须实现的抽象方法
+    public abstract void StateFn();                  // 状态逻辑执行
+    public abstract void InitWhenChangeStateFn();    // 状态初始化
+    
+    // 受保护的成员
+    protected Dictionary<string, object> m_Blackboard;  // 访问黑板数据
+}
+```
+
+### FnState 类
+
+`FnState` 类扩展了 `PackedState` 以支持函数式状态定义：
+
+```csharp
+public class FnState : PackedState
+{
+    // 构造函数
+    public FnState(string state, Node actor, Action<string> change_state_fn, 
+                   Dictionary<string, object> blackboard, Action fn, Action init_when_change_state_fn);
+    
+    // 自动实现的方法，调用提供的函数
+    public override void StateFn();                  // 调用提供的状态函数
+    public override void InitWhenChangeStateFn();    // 调用提供的初始化函数
+}
+```
+
+这允许您在使用 PackedState 系统的同时保持基于函数的状态逻辑方法。
 
 ### C#中的黑板数据
 
@@ -270,55 +458,84 @@ my_system.SetBoardValue("key", value)
 
 ### BSystemLiteCs 示例
 
-以下是使用 BSystemLiteCs 为旋转对象实现的完整示例：
+以下是使用 BSystemLiteCs 和 PackedState 类为旋转对象实现的完整示例：
 
 ```csharp
 using Godot;
 using System;
+using System.Collections.Generic;
 
 public partial class RotateBSystemLiteCs : BSystemLiteCs
 {
+    // 顺时针旋转状态类
+    public class ClockwiseState : PackedState
+    {
+        public ClockwiseState(Node actor, Action<string> change_state_fn, Dictionary<string, object> blackboard) 
+            : base("Clockwise", actor, change_state_fn, blackboard)
+        {
+        }
+
+        public override void StateFn()
+        {
+            if ((int)GetActor().Get("rotate_times") >= 200)
+            {
+                ChangeState("CounterClockwise");
+            }
+            else
+            {
+                GetActor().Call("rotate_clockwise_180");
+            }
+        }
+
+        public override void InitWhenChangeStateFn()
+        {
+            // 无需特殊初始化
+        }
+    }
+
+    // 逆时针旋转状态类
+    public class CounterClockwiseState : PackedState
+    {
+        public CounterClockwiseState(Node actor, Action<string> change_state_fn, Dictionary<string, object> blackboard) 
+            : base("CounterClockwise", actor, change_state_fn, blackboard)
+        {
+        }
+
+        public override void StateFn()
+        {
+            if ((int)GetActor().Get("rotate_times") == 0)
+            {
+                ChangeState("Clockwise");
+            }
+            else
+            {
+                GetActor().Call("rotate_counterclockwise_180");
+            }
+        }
+
+        public override void InitWhenChangeStateFn()
+        {
+            // 无需特殊初始化
+        }
+    }
+
     protected override void InitCall()
     {
-        InsertState("Clockwise", ClockwiseState, ClockwiseInit);
-        InsertState("CounterClockwise", CounterClockwiseState, CounterClockwiseInit);
-    }
-
-    public void ClockwiseState()
-    {
-        if ((int)Actor.Get("rotate_times") >= 200)
-        {
-            ChangeState("CounterClockwise");
-        }
-        else
-        {
-            Actor.Call("rotate_clockwise_180");
-        }
-    }
-
-    public void ClockwiseInit()
-    {
-        // 无需特殊初始化
-    }
-
-    public void CounterClockwiseState()
-    {
-        if ((int)Actor.Get("rotate_times") == 0)
-        {
-            ChangeState("Clockwise");
-        }
-        else
-        {
-            Actor.Call("rotate_counterclockwise_180");
-        }
-    }
-
-    public void CounterClockwiseInit()
-    {
-        // 无需特殊初始化
+        // 注册 PackedState 实例
+        InsertState(new ClockwiseState(Actor, ChangeState, m_Blackboard));
+        InsertState(new CounterClockwiseState(Actor, ChangeState, m_Blackboard));
     }
 }
 ```
+
+### 何时使用 BSystemLiteCs
+
+在以下情况下使用 BSystemLiteCs：
+
+- 您有一个只包含少量状态的简单状态机
+- 您想直接控制状态逻辑
+- 性能至关重要
+- 您的行为不需要复杂的层次结构
 
 ## 所有节点的通用方法
 
