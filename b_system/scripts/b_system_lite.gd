@@ -10,6 +10,9 @@ var blackboard: Dictionary = {}
 
 func _ready():
 	_init_call()
+	
+
+func start_system():
 	change_state(init_state)
 
 func insert_state(state: String, fn: Callable, init_fn: Callable):
