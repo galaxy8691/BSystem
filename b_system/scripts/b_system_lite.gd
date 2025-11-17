@@ -7,12 +7,18 @@ var blackboard: Dictionary = {}
 
 @export var actor: Node
 @export var init_state: String
+@export var auto_start: bool = true
+var has_started: bool = false
 
 func _ready():
 	_init_call()
-	
+	if auto_start:
+		start_system()
 
 func start_system():
+	if has_started:
+		return
+	has_started = true
 	change_state(init_state)
 
 func insert_state(state: String, fn: Callable, init_fn: Callable):
@@ -31,6 +37,8 @@ func _init_call():
 	pass
 
 func _physics_process(_delta: float) -> void:
+	if not has_started:
+		return
 	var current_state = blackboard.get("current_state")
 	var state_fn = state_fns.get(current_state)
 	state_fn.call()
